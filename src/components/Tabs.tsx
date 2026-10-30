@@ -1,0 +1,6 @@
+import { FileText, Plus, X } from 'lucide-react'
+export interface Tab { id: string; path: string | null; name: string; content: string; savedContent: string; revision: string; state: 'saved' | 'dirty' | 'saving' | 'error' | 'conflict'; error?: string }
+export const isDirty = (tab: Tab) => tab.content !== tab.savedContent
+export function Tabs({ tabs, activeId, select, close, create }: { tabs: Tab[]; activeId: string | null; select: (id: string) => void; close: (id: string) => void; create: () => void }) {
+  return <div className="tabs" role="tablist" aria-label="Documents ouverts">{tabs.map(tab => <div key={tab.id} className={`tab ${tab.id === activeId ? 'active' : ''}`}><button role="tab" aria-selected={tab.id === activeId} title={tab.path ?? tab.name} onClick={() => select(tab.id)}><FileText size={14} /><span>{tab.name}</span>{isDirty(tab) && <span className="dirty-dot" aria-label="Modifications non enregistrées" />}</button><button title={`Fermer ${tab.name}`} aria-label={`Fermer ${tab.name}`} onClick={() => close(tab.id)}><X size={13} /></button></div>)}<button className="new-tab" title="Nouveau document" aria-label="Nouvel onglet" onClick={create}><Plus size={16} /></button></div>
+}
