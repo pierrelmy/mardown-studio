@@ -45,12 +45,32 @@ web indépendant.
 - Détection des changements externes toutes les 2,5 secondes : rechargement des onglets
   propres et signalement des conflits pour les onglets modifiés.
 - Restauration du workspace, des fichiers ouverts, de l’onglet actif et des préférences.
-- Export HTML autonome (polices et images locales intégrées) et PDF A4. Les exports
-  utilisent une page claire adaptée à la lecture et à l’impression.
+- Quatre thèmes de document : Studio, Éditorial, Technique et Minuit, indépendants du thème de l’application.
+- Taille du texte, interligne et largeur de lecture personnalisables et persistants.
+- Export HTML autonome (polices et images locales intégrées) et PDF A4 ou Letter,
+  avec le même thème, la même typographie et les mêmes palettes de code et de diagrammes que l’aperçu.
 
 Les brouillons sans chemin doivent être enregistrés une première fois pour activer
 l’autosave. Les documents sont toujours des fichiers `.md` ordinaires sur disque.
 La session contient uniquement des chemins et des préférences, jamais le texte des documents.
+
+## Personnaliser les documents
+
+Cliquez sur l’icône **palette** dans la barre supérieure pour ouvrir **Style du document**.
+Les cartes donnent un aperçu des quatre thèmes ; la sélection s’applique immédiatement.
+Vous pouvez choisir une taille de texte de 12 à 24 px, un interligne de 1,4 à 2,2 et une
+largeur de lecture étroite, standard ou large. **Réinitialiser** rétablit les valeurs par défaut.
+
+Ces préférences sont globales à l’application et sont restaurées à la prochaine ouverture.
+Elles ne modifient pas les fichiers Markdown. Le thème clair/sombre de l’interface reste
+indépendant du thème de document : une interface sombre peut afficher un document ivoire.
+La boîte **Exporter** permet de choisir le thème et le format PDF (A4 ou Letter) avant
+l’enregistrement. La largeur de lecture reste plafonnée par la largeur du papier en PDF.
+Les polices sont celles du système, ce qui peut produire de légères différences entre OS.
+
+Le catalogue et les tokens sont centralisés dans `shared/document-themes.ts` ; les styles
+d’aperçu et d’export utilisent les mêmes variables. Les sessions plus anciennes sont
+migrées automatiquement vers le thème Studio sans perdre leurs autres préférences.
 
 ## Raccourcis
 

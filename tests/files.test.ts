@@ -1,3 +1,4 @@
+import { defaultDocumentAppearance } from '../shared/document-themes'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { promises as fs } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -95,6 +96,7 @@ describe('session persistence', () => {
       paths: [12, 'note.md'],
     })
     expect(normalized.preferences).toEqual({
+      ...defaultDocumentAppearance,
       theme: 'dark',
       mode: 'split',
       autosave: true,

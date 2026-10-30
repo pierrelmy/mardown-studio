@@ -156,6 +156,45 @@ try {
   await page.getByRole('button', { name: 'Enregistrer', exact: true }).click()
   await waitDisk(initial + '\n![Pixel](pixel.png)\n')
   await expect(page.locator('[data-preview]')).toHaveAttribute('aria-busy', 'false')
+  // Document styles are independent of application chrome and survive HTML/PDF export.
+  for (const [id, name, background, diagramFill] of [
+    ['studio', 'Studio', 'rgb(255, 255, 255)', 'rgb(246, 245, 250)'],
+    ['technical', 'Technique', 'rgb(248, 250, 252)', 'rgb(234, 241, 247)'],
+    ['midnight', 'Minuit', 'rgb(28, 33, 48)', 'rgb(37, 45, 64)'],
+    ['editorial', 'Éditorial', 'rgb(251, 247, 237)', 'rgb(241, 234, 220)'],
+  ]) {
+    await page.getByRole('button', { name: 'Style du document', exact: true }).click()
+    await page.getByRole('button', { name: `Thème ${name}`, exact: true }).click()
+    await expect(page.getByRole('button', { name: `Thème ${name}`, exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await page.getByRole('button', { name: 'Terminé', exact: true }).click()
+    await expect(page.locator('.preview-scroll')).toHaveAttribute('data-document-theme', id)
+    await expect(page.locator('.preview-scroll')).toHaveCSS('background-color', background)
+    await expect(page.locator('[data-preview]')).toHaveAttribute('aria-busy', 'false')
+    await expect(page.locator('.prose .mermaid-diagram svg')).toHaveCount(1)
+    await expect(page.locator('.prose .mermaid-diagram svg .node rect').first()).toHaveCSS(
+      'fill',
+      diagramFill,
+    )
+    await page.screenshot({ path: join(artifacts, `theme-${id}.png`) })
+  }
+  await expect(page.locator('.app')).toHaveAttribute('data-theme', 'light')
+  await expect(page.locator('.prose')).toHaveCSS('font-family', /Georgia/)
+  await page.getByRole('button', { name: 'Style du document', exact: true }).click()
+  await page.getByRole('slider', { name: 'Taille du texte', exact: true }).focus()
+  await page.keyboard.press('Home')
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight')
+  await page.getByRole('slider', { name: 'Interligne', exact: true }).focus()
+  await page.keyboard.press('Home')
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowRight')
+  await page.getByRole('combobox', { name: 'Largeur de lecture' }).selectOption('wide')
+  await page.getByRole('combobox', { name: 'Format du PDF' }).selectOption('Letter')
+  await page.getByRole('button', { name: 'Terminé', exact: true }).click()
+  await expect(page.locator('.prose')).toHaveCSS('font-size', '18px')
+  await expect(page.locator('.prose')).toHaveCSS('max-width', '1040px')
+  console.log('OK quatre thèmes de document, typographie et indépendance du thème UI')
   const htmlPath = join(artifacts, 'export.html')
   await saveChoice(htmlPath)
   await page.getByRole('button', { name: 'Exporter', exact: true }).click()
@@ -170,12 +209,17 @@ try {
   )
   assert.ok(html.includes('<svg'))
   assert.ok(!html.includes('<script'))
+  assert.ok(html.includes('data-document-theme="editorial"'))
+  assert.ok(html.includes('--doc-font-size:18px'))
+  assert.ok(html.includes('size:Letter'))
   const pdfPath = join(artifacts, 'export.pdf')
   await saveChoice(pdfPath)
   await page.getByRole('button', { name: 'Exporter', exact: true }).click()
   await page.getByRole('button', { name: 'Exporter PDF', exact: true }).click()
   await expect(page.getByRole('dialog')).toHaveCount(0, { timeout: 15000 })
-  assert.equal((await fs.readFile(pdfPath)).subarray(0, 5).toString(), '%PDF-')
+  const pdf = await fs.readFile(pdfPath)
+  assert.equal(pdf.subarray(0, 5).toString(), '%PDF-')
+  assert.match(pdf.toString('latin1'), /\/MediaBox\s*\[\s*0\s+0\s+612(?:\.0+)?\s+792(?:\.0+)?\s*\]/)
   console.log('OK exports HTML autonome et PDF avec formules/diagrammes/images')
 
   await page.screenshot({ path: join(artifacts, 'studio-light.png') })
@@ -195,6 +239,12 @@ try {
   await expect(page.locator('.app')).toHaveAttribute('data-theme', 'dark')
   await expect(page.getByRole('separator')).toHaveAttribute('aria-valuenow', '48')
   await expect(page.getByRole('button', { name: 'Autosave désactivé' })).toBeVisible()
+  await expect(page.locator('.preview-scroll')).toHaveAttribute('data-document-theme', 'editorial')
+  await expect(page.locator('.prose')).toHaveCSS('font-size', '18px')
+  await page.getByRole('button', { name: 'Style du document', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Format du PDF' })).toHaveValue('Letter')
+  await expect(page.getByRole('combobox', { name: 'Largeur de lecture' })).toHaveValue('wide')
+  await page.getByRole('button', { name: 'Terminé', exact: true }).click()
   const denied = await page.evaluate(() => window.studio.read('/etc/passwd'))
   assert.equal(denied.ok, false)
   assert.deepEqual(errors, [])
