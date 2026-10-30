@@ -1,5 +1,8 @@
 # Markdown Studio
 
+[![CI](https://github.com/pierrelmy/mardown-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/pierrelmy/mardown-studio/actions/workflows/ci.yml)
+[![Couverture — rapport CI](https://img.shields.io/badge/couverture-rapport_CI-blue)](https://github.com/pierrelmy/mardown-studio/actions/workflows/ci.yml)
+
 Application desktop de rédaction Markdown locale, construite avec Electron, React,
 TypeScript, electron-vite, Tailwind et CodeMirror 6. L’interface est en français.
 
@@ -67,6 +70,7 @@ La session contient uniquement des chemins et des préférences, jamais le texte
 ## Scripts et validation
 
 ```sh
+npm run test:coverage # tests unitaires + couverture et seuils
 npm run check         # format, TypeScript strict et tests unitaires
 npm run build         # contrôle TypeScript puis compilation des trois processus
 npm start             # lancer le build compilé
@@ -89,6 +93,47 @@ images HTTPS et les images raster en data URL sont prises en charge. Les SVG loc
 ne sont pas chargés. Les images HTTPS restent des liens réseau dans l’export HTML.
 Les liens internes vers d’autres fichiers, la recherche globale, la palette de
 commandes et le Live Preview intégré sont des évolutions, conformément au périmètre V1.
+
+## CI et rapports de couverture
+
+La [CI GitHub Actions](https://github.com/pierrelmy/mardown-studio/actions/workflows/ci.yml)
+s’exécute à chaque push et à chaque ouverture ou mise à jour de PR, ainsi que manuellement.
+Elle vérifie le format et TypeScript, puis exécute les tests unitaires avec couverture V8.
+En parallèle, macOS, Windows et Linux exécutent les tests unitaires avec les mêmes
+seuils de couverture, la compilation,
+les tests dans une vraie application Electron et le packaging natif (`npm run pack`).
+Linux utilise Xvfb pour la fenêtre desktop. Aucun secret ou compte externe n’est requis.
+
+Pour voir la couverture dans GitHub, cliquez sur le badge **couverture — rapport CI**,
+ouvrez une exécution puis son résumé : le job **Tests unitaires et couverture** affiche
+les pourcentages par fichier et le total (lignes, instructions, fonctions et branches).
+L’artefact **coverage-report** contient aussi le rapport HTML navigable (`index.html`),
+`lcov.info`, `coverage-summary.json` et `summary.md`. Les artefacts
+**coverage-report-macos-latest**, **coverage-report-windows-latest** et
+**coverage-report-ubuntu-latest** donnent les mesures propres à chaque plateforme.
+Les rapports sont conservés 14 jours, y compris
+lorsque les tests ou les seuils échouent si Vitest a pu produire le rapport. Les captures
+et exports desktop de chaque OS sont conservés 7 jours ; les paquets natifs sont
+archivés avec leurs permissions et téléchargeables pendant 3 jours. Le badge CI affiche l’état du
+workflow ; le badge couverture ouvre les rapports, sans afficher de pourcentage figé.
+
+En local :
+
+```sh
+npm run test:coverage
+npm run coverage:summary
+# Ouvrir coverage/index.html dans un navigateur
+```
+
+La couverture inclut tout le TypeScript de production (`electron/`, `src/`, `shared/`),
+à l’exception des déclarations de types. Les tests desktop ne sont pas instrumentés
+par Vitest : leurs résultats sont distincts de la couverture unitaire. La base initiale
+est de 14,1 % des lignes pour l’ensemble du projet. Les seuils globaux initiaux sont
+14 % des lignes, 12 % des instructions, 7 % des fonctions et 14 % des branches.
+Les services fichiers et session ont chacun des seuils plus élevés : 85 % des lignes,
+80 % des instructions et des fonctions, 75 % des branches. Une régression sous ces seuils
+fait échouer la CI. Les valeurs sont centralisées dans `vitest.config.ts` et pourront
+être relevées à mesure que la couverture de l’interface progresse.
 
 ## Architecture et sauvegarde
 

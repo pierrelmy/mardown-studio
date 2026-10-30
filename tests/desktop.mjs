@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path'
 import assert from 'node:assert/strict'
 
 const root = await fs.mkdtemp(join(tmpdir(), 'markdown-studio-desktop-'))
+const artifacts = resolve(process.env.STUDIO_TEST_ARTIFACT_DIR ?? root)
+await fs.mkdir(artifacts, { recursive: true })
 const workspace = join(root, 'workspace')
 const profile = join(root, 'profile')
 await fs.mkdir(workspace)
@@ -148,7 +150,7 @@ try {
   await page.getByRole('button', { name: 'Enregistrer', exact: true }).click()
   await waitDisk(initial + '\n![Pixel](pixel.png)\n')
   await expect(page.locator('[data-preview]')).toHaveAttribute('aria-busy', 'false')
-  const htmlPath = join(root, 'export.html')
+  const htmlPath = join(artifacts, 'export.html')
   await saveChoice(htmlPath)
   await page.getByRole('button', { name: 'Exporter', exact: true }).click()
   await page.getByRole('button', { name: 'Exporter HTML', exact: true }).click()
@@ -162,7 +164,7 @@ try {
   )
   assert.ok(html.includes('<svg'))
   assert.ok(!html.includes('<script'))
-  const pdfPath = join(root, 'export.pdf')
+  const pdfPath = join(artifacts, 'export.pdf')
   await saveChoice(pdfPath)
   await page.getByRole('button', { name: 'Exporter', exact: true }).click()
   await page.getByRole('button', { name: 'Exporter PDF', exact: true }).click()
@@ -170,12 +172,13 @@ try {
   assert.equal((await fs.readFile(pdfPath)).subarray(0, 5).toString(), '%PDF-')
   console.log('OK exports HTML autonome et PDF avec formules/diagrammes/images')
 
-  await page.screenshot({ path: join(root, 'studio-light.png') })
+  await page.screenshot({ path: join(artifacts, 'studio-light.png') })
   await page.getByRole('button', { name: 'Changer le thème' }).click()
-  await page.screenshot({ path: join(root, 'studio-dark.png') })
+  await page.screenshot({ path: join(artifacts, 'studio-dark.png') })
   // Flush and close using the real renderer handshake.
+  const closed = app.waitForEvent('close')
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].close())
-  await app.waitForEvent('close')
+  await closed
   app = null
   await launch()
   await expect(page.getByRole('tab')).toHaveCount(3)
@@ -208,10 +211,10 @@ try {
   console.log(
     'OK nouveau brouillon, fermeture fenêtre protégée, Enregistrer sous et ouverture hors workspace',
   )
-  console.log(`Artefacts de vérification : ${root}`)
+  console.log(`Artefacts de vérification : ${artifacts}`)
 } catch (error) {
-  if (page) await page.screenshot({ path: join(root, 'failure.png') }).catch(() => {})
-  console.error(`Artefacts de diagnostic : ${root}`)
+  if (page) await page.screenshot({ path: join(artifacts, 'failure.png') }).catch(() => {})
+  console.error(`Artefacts de diagnostic : ${artifacts}`)
   throw error
 } finally {
   if (app) await app.evaluate(({ app }) => app.exit()).catch(() => {})

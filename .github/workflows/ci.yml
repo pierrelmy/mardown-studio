@@ -1,25 +1,112 @@
-name: Build and test
+name: CI
+
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  quality:
+    name: Tests unitaires et couverture
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Format
+        run: npm run format:check
+      - name: TypeScript strict
+        run: npm run typecheck
+      - name: Tests et seuils de couverture
+        run: npm run test:coverage
+      - name: Résumé de couverture dans GitHub
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        run: npm run coverage:summary
+      - name: Rapport de couverture HTML, LCOV et JSON
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14
+
+  desktop:
+    name: Desktop — ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      STUDIO_TEST_ARTIFACT_DIR: test-results/desktop
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run check
-      - run: npm run build
-      - run: npm run pack
-      - uses: actions/upload-artifact@v4
+      - name: Tests unitaires et couverture sur la plateforme
+        run: npm run test:coverage
+      - name: Résumé de couverture de la plateforme
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        run: npm run coverage:summary
+      - name: Rapport de couverture de la plateforme
+        if: ${{ !cancelled() && hashFiles('coverage/coverage-summary.json') != '' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: coverage-report-${{ matrix.os }}
+          path: coverage/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Compilation Electron, preload et renderer
+        run: npm run build
+      - name: Préparer l’affichage Linux et la sandbox Chromium
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes xvfb libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2t64
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Tests Electron — Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum npm run test:desktop
+      - name: Tests Electron — macOS et Windows
+        if: runner.os != 'Linux'
+        run: npm run test:desktop
+      - name: Captures et exports des tests desktop
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: desktop-tests-${{ matrix.os }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Packaging natif
+        run: npm run pack
+      - name: Archiver le paquet en préservant les permissions
+        shell: bash
+        run: tar -czf markdown-studio-${{ runner.os }}-${{ runner.arch }}.tar.gz -C release .
+      - name: Paquet natif compilé
+        uses: actions/upload-artifact@v6
         with:
           name: markdown-studio-${{ matrix.os }}
-          path: release/
+          path: markdown-studio-*.tar.gz
+          if-no-files-found: error
+          retention-days: 3

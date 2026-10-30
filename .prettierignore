@@ -4,3 +4,4 @@ release
 coverage
 docs
 package-lock.json
+test-results
