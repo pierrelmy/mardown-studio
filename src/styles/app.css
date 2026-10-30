@@ -109,3 +109,17 @@ button.secondary { border: 1px solid var(--line); padding: 9px 13px; background:
 .split-handle { width: 5px; cursor: col-resize; border-left: 1px solid var(--line); flex-shrink: 0; background: transparent; outline-offset: -2px; }
 .split-handle:hover, .split-handle:focus { background: var(--accent-bg); }
 .preview-error { color: var(--error); }
+.editor-wrapper { min-width: 0; display: flex; }
+.document-breadcrumb { height: 35px; padding: 0 24px; display: flex; align-items: center; gap: 11px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 10px; flex-shrink: 0; }
+.document-breadcrumb > span:nth-child(3) { color: var(--text); }
+.draft-label { margin-left: auto; font-size: 9px; }
+.error-banner, .conflict-banner { display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: var(--error); background: var(--panel); border-bottom: 1px solid var(--line); font-size: 12px; }
+.error-banner > span, .conflict-banner > span { flex: 1; overflow-wrap: anywhere; }
+.error-banner svg, .conflict-banner svg { flex-shrink: 0; }
+.conflict-banner button { white-space: nowrap; font-size: 10px; padding: 5px 8px; }
+.welcome-eyebrow { font-size: 9px; color: var(--muted); letter-spacing: 2.5px; margin-bottom: 25px; }
+.welcome-actions { display: flex; gap: 12px; justify-content: center; }
+.welcome-link { margin: 20px auto 0; color: var(--muted); font-size: 11px; padding: 8px; }
+.welcome-shortcuts { display: flex; gap: 25px; justify-content: center; color: var(--muted); font-size: 10px; margin-top: 55px; }
+kbd { background: var(--hover); border: 1px solid var(--line); padding: 3px 5px; border-radius: 4px; font-size: 9px; }
+.busy { cursor: progress; }
