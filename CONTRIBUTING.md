@@ -210,3 +210,11 @@ La confiance repose sur HTTPS et les métadonnées du dépôt GitHub. Une signat
 ne prouve pas une identité Apple et ne remplace pas la notarisation. L’installateur ne
 modifie pas les réglages de sécurité de macOS. Windows utilise NSIS et `electron-updater` ;
 Linux utilise `electron-updater` pour les AppImage.
+
+## Licence des contributions
+
+Le projet utilise la [licence Markdown Studio — redistribution gratuite](LICENSE),
+avec interdiction de revente. Les contributions soumises pour intégration au projet
+sont proposées sous cette même licence, sauf accord écrit distinct. Chaque contributeur
+conserve les droits d’auteur sur son travail ; aucune cession de propriété n’est demandée.
+Conservez les mentions de licences des composants tiers que vous ajoutez.

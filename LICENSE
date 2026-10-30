@@ -1,0 +1,100 @@
+Licence Markdown Studio — redistribution gratuite
+Version 1.0 — 30 octobre 2026
+
+Copyright (c) 2026 Pierre Lamey
+
+Cette licence personnalisée autorise l'accès au code source, l'utilisation,
+la modification et la redistribution gratuite de Markdown Studio. Elle interdit
+la vente et la revente du Logiciel. Elle ne constitue pas une licence open source
+au sens de l'Open Source Definition de l'Open Source Initiative.
+
+1. Périmètre
+
+Le « Logiciel » désigne le code, les exécutables, la documentation et les ressources
+de Markdown Studio que Pierre Lamey ou d'autres contributeurs mettent à
+disposition sous cette licence et sur lesquels ils détiennent les droits nécessaires. Une « Version dérivée » désigne une modification,
+un fork ou une oeuvre incorporant une partie substantielle de ce Logiciel.
+
+Les composants tiers qui possèdent leur propre licence restent régis par celle-ci.
+Cette licence ne réduit pas les droits accordés par les titulaires de ces composants.
+Les contributeurs conservent les droits sur leurs contributions respectives.
+
+2. Droits accordés
+
+Sous réserve du respect des conditions suivantes, une autorisation mondiale,
+non exclusive et sans redevance vous est accordée pour :
+
+- utiliser et exécuter le Logiciel, à titre personnel, éducatif, associatif ou
+  professionnel, y compris pour les besoins internes d'une entreprise ;
+- étudier, copier et modifier son code source ;
+- créer des Versions dérivées ;
+- partager et redistribuer gratuitement le Logiciel et les Versions dérivées,
+  sous forme de code source ou d'exécutables.
+
+Cette licence ne vous impose pas de publier vos modifications privées.
+
+3. Attribution et maintien des conditions
+
+Toute redistribution du Logiciel ou d'une Version dérivée doit :
+
+- conserver l'avis de copyright, une copie intégrale de cette licence et les
+  mentions de licences tierces applicables ;
+- identifier clairement les modifications et ne pas présenter une Version dérivée
+  comme une version officielle approuvée par Pierre Lamey ;
+- maintenir les conditions de cette licence pour les parties du Logiciel qu'elle
+  couvre, sans accorder à des tiers le droit de les vendre ou de les revendre.
+
+4. Interdiction de vente et de revente
+
+Sans autorisation écrite préalable du titulaire des droits concerné, vous ne
+pouvez pas :
+
+- vendre ou revendre des copies, des exécutables, des licences ou des droits
+  d'utilisation du Logiciel ou d'une Version dérivée ;
+- facturer un abonnement ou une autre contrepartie obligatoire pour accéder au
+  Logiciel ou à une Version dérivée, y compris au travers d'un service hébergé ;
+- intégrer le Logiciel ou une partie substantielle de celui-ci dans une offre
+  logicielle payante afin de commercialiser cette fonctionnalité ;
+- contourner ces interdictions en renommant le Logiciel, en le modifiant, en
+  le regroupant avec d'autres produits ou en facturant obligatoirement sa
+  fourniture sous une autre dénomination.
+
+La prestation séparée de conseil, de formation ou de support peut être facturée,
+à condition qu'elle ne serve pas à facturer une copie, une licence ou l'accès au
+Logiciel et que son acquisition ne soit pas exigée pour obtenir le Logiciel
+redistribué gratuitement. Les dons réellement facultatifs sont autorisés.
+
+5. Documents et contenus produits
+
+Cette licence porte sur le Logiciel, et non sur les notes, documents, exports ou
+autres contenus que vous créez avec lui. Elle ne revendique aucun droit sur ces
+contenus et n'interdit pas leur utilisation, leur publication ou leur vente.
+Les droits de tiers éventuellement présents dans vos contenus restent applicables.
+
+6. Absence de garantie et responsabilité
+
+Dans la mesure permise par la loi applicable, le Logiciel est fourni « en l'état »,
+sans garantie expresse ou implicite, notamment de qualité marchande, d'adéquation
+à un besoin particulier ou d'absence de contrefaçon. Vous êtes responsable de
+l'utilisation du Logiciel et de la sauvegarde de vos données.
+
+Dans cette même mesure, les titulaires des droits et les contributeurs ne peuvent
+être tenus responsables des dommages résultant de l'utilisation ou de
+l'impossibilité d'utiliser le Logiciel. Aucune disposition de cette licence
+n'exclut une garantie, un droit ou une responsabilité qui ne peut légalement
+être exclu.
+
+7. Fin des droits et autorisations distinctes
+
+Le non-respect des conditions de cette licence met fin aux droits qu'elle vous
+accorde. Vous devez alors cesser les utilisations et redistributions non autorisées.
+Cette fin n'annule pas les droits des destinataires qui respectent eux-mêmes
+la licence.
+
+Les droits qui ne sont pas expressément accordés restent réservés à leurs
+titulaires. Cette licence n'accorde aucun droit sur les marques ou logos, au-delà
+de ce qui est nécessaire pour l'attribution et l'identification du projet.
+Une utilisation autrement interdite, notamment la revente, nécessite une
+permission écrite distincte du titulaire des droits concerné.
+
+Projet et contact : https://github.com/pierrelmy/mardown-studio

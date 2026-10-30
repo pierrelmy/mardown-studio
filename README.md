@@ -195,4 +195,17 @@ leur changelog. La publication attend la réussite des builds de toutes les plat
 
 ---
 
-**Licence :** projet déclaré `UNLICENSED` dans [package.json](package.json).
+## Licence
+
+Copyright © 2026 **Pierre Lamey**. Le projet est distribué sous la
+[licence Markdown Studio — redistribution gratuite](LICENSE), une licence personnalisée
+à **source disponible**, avec interdiction de revente.
+
+L’utilisation personnelle ou professionnelle, la modification et le partage gratuit
+sont autorisés avec conservation des mentions et de la licence. La vente du logiciel,
+de ses versions dérivées ou de leur accès payant nécessite une autorisation écrite.
+La licence ne restreint pas la commercialisation de vos propres documents et exports.
+
+La restriction de revente signifie que cette licence n’est pas « open source » au sens
+de l’[Open Source Initiative](https://opensource.org/osd). Les dépendances tierces
+conservent leurs propres licences. Le texte complet dans [LICENSE](LICENSE) fait foi.

@@ -2,7 +2,10 @@
   "name": "markdown-studio",
   "version": "0.1.0",
   "description": "Un éditeur Markdown local, rapide et soigné",
-  "author": "Markdown Studio",
+  "author": {
+    "name": "Pierre Lamey",
+    "url": "https://github.com/pierrelmy"
+  },
   "private": true,
   "type": "module",
   "main": "out/main/main.js",
@@ -35,7 +38,8 @@
     },
     "files": [
       "out/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE"
     ],
     "mac": {
       "target": [
@@ -112,7 +116,7 @@
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
   },
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://github.com/pierrelmy/mardown-studio",
   "repository": {
     "type": "git",
