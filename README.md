@@ -13,7 +13,13 @@ npm ci
 npm run dev
 ```
 
-Si l’installation npm n’a pas téléchargé le binaire Electron :
+Les commandes `dev`, `start` et `test:desktop` installent automatiquement le binaire
+Electron s’il manque, puis réutilisent l’installation existante. Le premier lancement
+nécessite un accès réseau, sauf si le téléchargement est déjà en cache. Electron
+utilise désormais un téléchargement au premier lancement plutôt qu’un script
+`postinstall` ; `npm ci` seul ne crée donc pas nécessairement le binaire.
+
+Pour installer ce binaire séparément ou réessayer après une erreur réseau :
 
 ```sh
 npx install-electron --no
