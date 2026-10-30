@@ -14,7 +14,9 @@ export function Editor({
   content,
   theme,
   change,
+  selection,
 }: {
+  selection?: { line: number; column: number; sequence: number } | null
   id: string
   content: string
   theme: Theme
@@ -78,6 +80,19 @@ export function Editor({
       effects: themeSlot.current.reconfigure(EditorView.theme({}, { dark: theme === 'dark' })),
     })
   }, [theme])
+  useEffect(() => {
+    const editor = view.current
+    if (!editor || !selection) return
+    const line = editor.state.doc.line(
+      Math.max(1, Math.min(editor.state.doc.lines, selection.line)),
+    )
+    const position = line.from + Math.max(0, Math.min(line.length, selection.column - 1))
+    editor.dispatch({
+      selection: { anchor: position },
+      effects: EditorView.scrollIntoView(position, { y: 'center' }),
+    })
+    editor.focus()
+  }, [selection?.sequence, id])
   return (
     <section className="editor-panel">
       <div className="panel-label">

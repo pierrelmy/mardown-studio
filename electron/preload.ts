@@ -11,6 +11,8 @@ const listen = (channel: string, callback: () => void) => {
   }
 }
 const api: StudioAPI = {
+  search: (query, matchCase) => invoke('search', query, matchCase),
+  cancelSearch: () => invoke('cancelSearch'),
   updateState: () => invoke('updateState'),
   checkUpdate: () => invoke('checkUpdate'),
   downloadUpdate: () => invoke('downloadUpdate'),

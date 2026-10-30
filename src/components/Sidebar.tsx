@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useState } from 'react'
 import {
   ChevronRight,
@@ -9,6 +10,8 @@ import {
   FolderPlus,
   MoreHorizontal,
   RefreshCw,
+  Search,
+  ListTree,
 } from 'lucide-react'
 import type { FileNode, Workspace } from '../../shared/types'
 export function Sidebar({
@@ -18,7 +21,15 @@ export function Sidebar({
   openWorkspace,
   action,
   refresh,
+  mode,
+  setMode,
+  searchPanel,
+  outlinePanel,
 }: {
+  mode: 'files' | 'search' | 'outline'
+  setMode: (mode: 'files' | 'search' | 'outline') => void
+  searchPanel: ReactNode
+  outlinePanel: ReactNode
   workspace: Workspace | null
   activePath?: string | null
   open: (path: string) => void
@@ -120,51 +131,85 @@ export function Sidebar({
     })
   return (
     <aside className="sidebar">
-      <div className="sidebar-heading">
-        <span>EXPLORATEUR</span>
-        <button title="Actualiser" aria-label="Actualiser l’explorateur" onClick={refresh}>
-          <RefreshCw size={14} />
+      <div className="sidebar-tabs" role="group" aria-label="Panneau latéral">
+        <button
+          aria-label="Explorateur"
+          title="Explorateur"
+          aria-pressed={mode === 'files'}
+          onClick={() => setMode('files')}
+        >
+          <FolderOpen size={17} />
+        </button>
+        <button
+          aria-label="Recherche workspace"
+          title="Recherche · ⌘/Ctrl Shift F"
+          aria-pressed={mode === 'search'}
+          onClick={() => setMode('search')}
+        >
+          <Search size={17} />
+        </button>
+        <button
+          aria-label="Sommaire"
+          title="Sommaire"
+          aria-pressed={mode === 'outline'}
+          onClick={() => setMode('outline')}
+        >
+          <ListTree size={17} />
         </button>
       </div>
-      {workspace ? (
+      {mode === 'search' ? (
+        searchPanel
+      ) : mode === 'outline' ? (
+        outlinePanel
+      ) : (
         <>
-          <div className="workspace-heading">
-            <FolderOpen size={15} />
-            <span title={workspace.path}>{workspace.path.split(/[\\/]/).pop()}</span>
-            <button
-              title="Nouveau fichier"
-              aria-label="Créer un fichier dans le workspace"
-              onClick={() => action('file', workspace.path)}
-            >
-              <Plus size={15} />
-            </button>
-            <button
-              title="Nouveau dossier"
-              aria-label="Créer un dossier dans le workspace"
-              onClick={() => action('directory', workspace.path)}
-            >
-              <FolderPlus size={15} />
+          <div className="sidebar-heading">
+            <span>EXPLORATEUR</span>
+            <button title="Actualiser" aria-label="Actualiser l’explorateur" onClick={refresh}>
+              <RefreshCw size={14} />
             </button>
           </div>
-          <nav aria-label="Fichiers du workspace" className="file-tree">
-            {workspace.tree.length ? (
-              render(workspace.tree)
-            ) : (
-              <p className="sidebar-hint">
-                Ce dossier est vide. Créez votre premier fichier Markdown.
-              </p>
-            )}
-          </nav>
+          {workspace ? (
+            <>
+              <div className="workspace-heading">
+                <FolderOpen size={15} />
+                <span title={workspace.path}>{workspace.path.split(/[\\/]/).pop()}</span>
+                <button
+                  title="Nouveau fichier"
+                  aria-label="Créer un fichier dans le workspace"
+                  onClick={() => action('file', workspace.path)}
+                >
+                  <Plus size={15} />
+                </button>
+                <button
+                  title="Nouveau dossier"
+                  aria-label="Créer un dossier dans le workspace"
+                  onClick={() => action('directory', workspace.path)}
+                >
+                  <FolderPlus size={15} />
+                </button>
+              </div>
+              <nav aria-label="Fichiers du workspace" className="file-tree">
+                {workspace.tree.length ? (
+                  render(workspace.tree)
+                ) : (
+                  <p className="sidebar-hint">
+                    Ce dossier est vide. Créez votre premier fichier Markdown.
+                  </p>
+                )}
+              </nav>
+            </>
+          ) : (
+            <div className="sidebar-empty">
+              <FolderOpen size={28} />
+              <p>Un espace pour vos idées.</p>
+              <button className="secondary" onClick={openWorkspace}>
+                Ouvrir un dossier
+              </button>
+              <p className="sidebar-hint">Vos fichiers restent sur votre ordinateur.</p>
+            </div>
+          )}
         </>
-      ) : (
-        <div className="sidebar-empty">
-          <FolderOpen size={28} />
-          <p>Un espace pour vos idées.</p>
-          <button className="secondary" onClick={openWorkspace}>
-            Ouvrir un dossier
-          </button>
-          <p className="sidebar-hint">Vos fichiers restent sur votre ordinateur.</p>
-        </div>
       )}
       <div className="sidebar-footer">
         <span className="local-dot" /> Espace local <span>Markdown Studio</span>

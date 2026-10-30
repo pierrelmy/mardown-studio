@@ -1,3 +1,4 @@
+import type { SearchResults } from './search'
 import type { UpdateState } from './updates'
 import { defaultDocumentAppearance, type DocumentAppearance } from './document-themes'
 export type Theme = 'dark' | 'light'
@@ -40,6 +41,8 @@ export interface Workspace {
 }
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string; code?: string }
 export interface StudioAPI {
+  search(query: string, matchCase: boolean): Promise<Result<SearchResults>>
+  cancelSearch(): Promise<Result<void>>
   updateState(): Promise<Result<UpdateState>>
   checkUpdate(): Promise<Result<UpdateState>>
   downloadUpdate(): Promise<Result<UpdateState>>

@@ -40,6 +40,12 @@ export function useStudio(ask: Ask) {
   const workspaceRef = useRef<Workspace | null>(null)
   const [preferences, setPreferences] = useState(defaultPreferences)
   const [ready, setReady] = useState(false)
+  const [navigation, setNavigation] = useState<{
+    id: string
+    line: number
+    column: number
+    sequence: number
+  } | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inFlight = useRef(new Map<string, Promise<boolean>>())
@@ -76,11 +82,12 @@ export function useStudio(ask: Ask) {
     const existing = tabsRef.current.find((tab) => tab.path === doc.path)
     if (existing) {
       activate(existing.id)
-      return
+      return existing.id
     }
     const tab = fromDisk(doc)
     mutate((tabs) => [...tabs, tab])
     activate(tab.id)
+    return tab.id
   }
   const refresh = async () => {
     setFolder(unwrap(await window.studio.tree()))
@@ -272,6 +279,13 @@ export function useStudio(ask: Ask) {
       if (existing) activate(existing.id)
       else addDocument(unwrap(await window.studio.read(path)))
     })
+  const openAt = (path: string, line: number, column: number) =>
+    guard(async () => {
+      const existing = tabsRef.current.find((tab) => tab.path === path)
+      const id = existing?.id ?? addDocument(unwrap(await window.studio.read(path)))
+      activate(id)
+      setNavigation({ id, line, column, sequence: Date.now() })
+    })
   const openFile = () =>
     guard(async () => {
       const doc = unwrap(await window.studio.openFile())
@@ -437,6 +451,8 @@ export function useStudio(ask: Ask) {
     })
   }, [ready, preferences])
   return {
+    openAt,
+    navigation,
     prepareForQuit,
     tabs,
     activeId,

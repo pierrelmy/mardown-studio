@@ -12,9 +12,11 @@ import {
   FileUp,
   Download,
   Palette,
+  Command,
 } from 'lucide-react'
 import type { Preferences, ViewMode } from '../../shared/types'
 export function Toolbar({
+  commands,
   preferences,
   update,
   save,
@@ -25,6 +27,7 @@ export function Toolbar({
   appearance,
   hasDocument,
 }: {
+  commands: () => void
   preferences: Preferences
   update: (patch: Partial<Preferences>) => void
   save: () => void
@@ -97,6 +100,13 @@ export function Toolbar({
         ))}
       </div>
       <div className="toolbar-end">
+        <button
+          title="Palette de commandes · ⌘/Ctrl K"
+          aria-label="Ouvrir la palette de commandes"
+          onClick={commands}
+        >
+          <Command size={17} />
+        </button>
         <button title="Style du document" aria-label="Style du document" onClick={appearance}>
           <Palette size={17} />
         </button>

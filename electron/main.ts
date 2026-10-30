@@ -1,3 +1,4 @@
+import { WorkspaceSearchService } from './services/search.service'
 import { createUpdateBackend } from './services/update-backend'
 import { UpdateService } from './services/update.service'
 import { fetchReleaseNotes } from './services/release-notes.service'
@@ -18,6 +19,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'studio-asset', privileges: { standard: true, secure: true, supportFetchAPI: true } },
 ])
 const files = new FileService()
+const workspaceSearch = new WorkspaceSearchService(files)
 let window: BrowserWindow | null = null
 let allowClose = false
 let closing = false
@@ -167,6 +169,8 @@ app.whenReady().then(async () => {
       throw error
     }
   })
+  register('search', async (query, matchCase) => workspaceSearch.search(query, matchCase))
+  register('cancelSearch', async () => workspaceSearch.cancel())
   register('openFile', async () => {
     const choice = await dialog.showOpenDialog(window!, {
       properties: ['openFile'],

@@ -12,13 +12,24 @@ export function Preview({
   content,
   path,
   appearance,
+  scrollTo,
 }: {
+  scrollTo?: { id: string; sequence: number } | null
   content: string
   path: string | null
   appearance: DocumentAppearance
 }) {
   const theme = getDocumentTheme(appearance.documentTheme)
   const host = useRef<HTMLDivElement>(null)
+  const pendingScroll = useRef(scrollTo)
+  pendingScroll.current = scrollTo
+  const scrollToHeading = () => {
+    if (pendingScroll.current)
+      host.current
+        ?.querySelector(`#${CSS.escape(pendingScroll.current.id)}`)
+        ?.scrollIntoView({ block: 'start' })
+  }
+  useEffect(scrollToHeading, [scrollTo?.sequence])
   const [rendering, setRendering] = useState(false)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -54,6 +65,7 @@ export function Preview({
           }
           if (!cancelled && host.current) {
             host.current.replaceChildren(...container.childNodes)
+            scrollToHeading()
             setError(null)
           }
         } catch (error) {

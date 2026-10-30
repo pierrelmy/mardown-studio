@@ -1,3 +1,7 @@
+import { CommandPalette, type StudioCommand } from './components/CommandPalette'
+import { WorkspaceSearch } from './components/WorkspaceSearch'
+import { Outline } from './components/Outline'
+import { workspaceFiles } from './services/workspace'
 import { UpdateCenter } from './components/UpdateCenter'
 import { DocumentAppearancePanel, PageSizeControl } from './components/DocumentAppearance'
 import { documentThemes } from '../shared/document-themes'
@@ -19,6 +23,14 @@ export default function App() {
   const studio = useStudio(ask)
   const { preferences, active } = studio
   const area = useRef<HTMLDivElement>(null)
+  const [sidebarMode, setSidebarMode] = useState<'files' | 'search' | 'outline'>('files')
+  const [paletteMode, setPaletteMode] = useState<'files' | 'commands' | null>(null)
+  const [headingNavigation, setHeadingNavigation] = useState<{
+    id: string
+    headingId: string
+    line: number
+    sequence: number
+  } | null>(null)
   const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -35,8 +47,16 @@ export default function App() {
       )
         return
       const key = event.key.toLowerCase()
-      if (['s', 'o', 'n', 'w', 'b'].includes(key) || key === '\\') event.preventDefault()
+      if (
+        ['s', 'o', 'n', 'w', 'b', 'p', 'k'].includes(key) ||
+        (key === 'f' && event.shiftKey) ||
+        key === '\\'
+      )
+        event.preventDefault()
       if (studio.busy) return
+      if (key === 'p') setPaletteMode(event.shiftKey ? 'commands' : 'files')
+      if (key === 'k') setPaletteMode('commands')
+      if (key === 'f' && event.shiftKey) showSidebar('search')
       if (key === 's' && active) void studio.save(active.id, event.shiftKey)
       if (key === 'o') {
         if (event.shiftKey) void studio.openFolder()
@@ -71,9 +91,102 @@ export default function App() {
       setExporting(false)
     }
   }
+  const showSidebar = (mode: 'search' | 'outline' | 'files') => {
+    studio.update({ sidebar: true })
+    setSidebarMode(mode)
+    if (mode === 'search')
+      requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLInputElement>('[aria-label="Rechercher dans le workspace"]')
+          ?.focus(),
+      )
+  }
+  const commands: StudioCommand[] = [
+    { id: 'new', label: 'Nouveau document', shortcut: '⌘/Ctrl N', run: studio.create },
+    {
+      id: 'open-file',
+      label: 'Ouvrir un fichier',
+      shortcut: '⌘/Ctrl O',
+      run: () => {
+        void studio.openFile()
+      },
+    },
+    {
+      id: 'workspace',
+      label: 'Ouvrir un dossier',
+      keywords: 'workspace projet',
+      run: () => {
+        void studio.openFolder()
+      },
+    },
+    {
+      id: 'save',
+      label: 'Enregistrer le document',
+      shortcut: '⌘/Ctrl S',
+      disabled: !active,
+      run: () => {
+        if (active) void studio.save(active.id)
+      },
+    },
+    {
+      id: 'save-as',
+      label: 'Enregistrer une copie',
+      shortcut: '⌘/Ctrl Shift S',
+      disabled: !active,
+      run: () => {
+        if (active) void studio.save(active.id, true)
+      },
+    },
+    {
+      id: 'search',
+      label: 'Rechercher dans le workspace',
+      shortcut: '⌘/Ctrl Shift F',
+      run: () => showSidebar('search'),
+    },
+    {
+      id: 'outline',
+      label: 'Afficher le sommaire',
+      keywords: 'titres navigation plan',
+      run: () => showSidebar('outline'),
+    },
+    { id: 'explorer', label: 'Afficher l’explorateur', run: () => showSidebar('files') },
+    {
+      id: 'appearance',
+      label: 'Personnaliser le style du document',
+      keywords: 'theme police apparence',
+      run: () => setAppearanceOpen(true),
+    },
+    {
+      id: 'theme',
+      label: 'Changer le thème de l’interface',
+      run: () => studio.update({ theme: preferences.theme === 'dark' ? 'light' : 'dark' }),
+    },
+    {
+      id: 'export',
+      label: 'Exporter le document',
+      keywords: 'html pdf',
+      disabled: !active,
+      run: () => setExportOpen(true),
+    },
+    ...(['editor', 'preview', 'split'] as const).map((mode) => ({
+      id: mode,
+      label: mode === 'editor' ? 'Vue éditeur' : mode === 'preview' ? 'Vue aperçu' : 'Vue partagée',
+      run: () => studio.update({ mode }),
+    })),
+  ]
+  const headingSelection =
+    active && headingNavigation?.id === active.id
+      ? { line: headingNavigation.line, column: 1, sequence: headingNavigation.sequence }
+      : null
+  const searchSelection = studio.navigation?.id === active?.id ? studio.navigation : null
+  const selection =
+    headingSelection && (!searchSelection || headingSelection.sequence >= searchSelection.sequence)
+      ? headingSelection
+      : searchSelection
   return (
     <div className="app" data-theme={preferences.theme}>
       <Toolbar
+        commands={() => setPaletteMode('commands')}
         preferences={preferences}
         update={studio.update}
         save={() => {
@@ -109,6 +222,34 @@ export default function App() {
       >
         {preferences.sidebar && (
           <Sidebar
+            mode={sidebarMode}
+            setMode={showSidebar}
+            searchPanel={
+              <WorkspaceSearch
+                workspace={studio.workspace}
+                tabs={studio.tabs}
+                navigate={(match) => {
+                  setHeadingNavigation(null)
+                  if (preferences.mode === 'preview') studio.update({ mode: 'split' })
+                  void studio.openAt(match.path, match.line, match.column)
+                }}
+              />
+            }
+            outlinePanel={
+              <Outline
+                content={active?.content ?? ''}
+                hasDocument={!!active}
+                navigate={(heading) => {
+                  if (active)
+                    setHeadingNavigation({
+                      id: active.id,
+                      headingId: heading.id,
+                      line: heading.line,
+                      sequence: Date.now(),
+                    })
+                }}
+              />
+            }
             workspace={studio.workspace}
             activePath={active?.path}
             open={(path) => {
@@ -184,6 +325,7 @@ export default function App() {
                     <Editor
                       key={active.id}
                       id={active.id}
+                      selection={selection}
                       content={active.content}
                       theme={preferences.theme}
                       change={(content) => studio.edit(active.id, content)}
@@ -233,7 +375,16 @@ export default function App() {
                   />
                 )}
                 {preferences.mode !== 'editor' && (
-                  <Preview content={active.content} path={active.path} appearance={preferences} />
+                  <Preview
+                    content={active.content}
+                    path={active.path}
+                    appearance={preferences}
+                    scrollTo={
+                      headingNavigation?.id === active.id
+                        ? { id: headingNavigation.headingId, sequence: headingNavigation.sequence }
+                        : null
+                    }
+                  />
                 )}
               </div>
             </>
@@ -288,6 +439,17 @@ export default function App() {
         autosave={preferences.autosave}
         toggleAutosave={() => studio.update({ autosave: !preferences.autosave })}
       />
+      {paletteMode && (
+        <CommandPalette
+          mode={paletteMode}
+          commands={commands}
+          files={workspaceFiles(studio.workspace?.tree ?? [])}
+          openFile={(path) => {
+            void studio.open(path)
+          }}
+          close={() => setPaletteMode(null)}
+        />
+      )}
       {dialog}
       {appearanceOpen && (
         <DocumentAppearancePanel

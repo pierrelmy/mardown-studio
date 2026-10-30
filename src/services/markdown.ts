@@ -1,3 +1,4 @@
+import { createHeadingSlugger, blockMathPattern } from './headings'
 import { Marked, type Tokens } from 'marked'
 import DOMPurify from 'dompurify'
 import katex from 'katex'
@@ -22,6 +23,7 @@ function mathHTML(text: string, displayMode: boolean): string {
     return `<code>${escapeHTML(text)}</code>`
   }
 }
+let headingSlug = createHeadingSlugger()
 const parser = new Marked({ gfm: true, breaks: false })
 parser.use({
   extensions: [
@@ -30,7 +32,7 @@ parser.use({
       level: 'block',
       start: (src) => src.indexOf('$$'),
       tokenizer(src) {
-        const match = /^\$\$\s*\n?([\s\S]+?)\n?\$\$(?:\n|$)/.exec(src)
+        const match = blockMathPattern.exec(src)
         if (match) return { type: 'blockMath', raw: match[0], text: match[1].trim() }
       },
       renderer: (token) => mathHTML(String(token.text), true),
@@ -48,11 +50,7 @@ parser.use({
   ],
   renderer: {
     heading({ tokens, text, depth }: Tokens.Heading) {
-      const id = text
-        .toLowerCase()
-        .replace(/[^\p{L}\p{N}\s-]/gu, '')
-        .trim()
-        .replace(/\s+/g, '-')
+      const id = headingSlug(text)
       return `<h${depth} id="${escapeHTML(id)}">${this.parser.parseInline(tokens)}</h${depth}>`
     },
     html({ text }: Tokens.HTML | Tokens.Tag) {
@@ -71,6 +69,7 @@ parser.use({
   },
 })
 export function renderMarkdown(content: string): string {
+  headingSlug = createHeadingSlugger()
   const html = parser.parse(content, { async: false }) as string
   return DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true, mathMl: true },
