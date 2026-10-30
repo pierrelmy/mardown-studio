@@ -1,9 +1,11 @@
-import { app, BrowserWindow, ipcMain, dialog, shell, protocol } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, protocol, Menu } from 'electron'
 import { join } from 'node:path'
 import { FileService, stringArgument, StudioError } from './services/file.service'
 import { loadSession, parseSession, writeSession } from './services/session.service'
 import { exportDocument } from './services/export.service'
 import type { Result, Session } from '../shared/types'
+
+if (!app.isPackaged && process.env.STUDIO_TEST_USER_DATA) app.setPath('userData', process.env.STUDIO_TEST_USER_DATA)
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'studio-asset', privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 const files = new FileService()
@@ -117,6 +119,11 @@ app.whenReady().then(async () => {
     allowClose = true
     window.close()
   })
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    ...(process.platform === 'darwin' ? [{ label: app.name, submenu: [{ role: 'about' as const }, { type: 'separator' as const }, { role: 'quit' as const }] }] : []),
+    { label: 'Édition', submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }] },
+    { label: 'Fenêtre', submenu: [{ role: 'minimize' }, { role: 'zoom' }, { role: 'togglefullscreen' }] }
+  ]))
   createWindow()
   const poll = setInterval(() => { if (window && !window.isDestroyed()) window.webContents.send('studio:disk-change') }, 2500)
   poll.unref()

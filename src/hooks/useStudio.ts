@@ -76,6 +76,7 @@ export function useStudio(ask: Ask) {
         }
         mutate(tabs => tabs.map(t => t.id === id ? { ...t, path: saved.path, name: nameOf(saved.path), revision: saved.revision, savedContent: saved.content, state: t.content === saved.content ? 'saved' : 'dirty' } : t))
         if (workspaceRef.current) await refresh().catch(report)
+        setError(null)
         return true
       } catch (error) {
         const conflict = error instanceof OperationError && error.code === 'CONFLICT'
@@ -139,7 +140,7 @@ export function useStudio(ask: Ask) {
     if (!tab?.path) return
     if (isDirty(tab) && await ask({ title: 'Recharger depuis le disque ?', message: 'Les modifications de cet onglet seront remplacées par la version du disque.', choices: [{ label: 'Recharger', value: 'reload', primary: true }] }) !== 'reload') return
     const doc = unwrap(await window.studio.read(tab.path))
-    mutate(tabs => tabs.map(t => t.id === id ? { ...fromDisk(doc), id } : t))
+    mutate(tabs => tabs.map(t => t.id === id ? { ...fromDisk(doc), id } : t)); setError(null)
   })
   useEffect(() => {
     if (!ready || !window.studio) return
