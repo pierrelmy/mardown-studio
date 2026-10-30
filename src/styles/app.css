@@ -456,6 +456,7 @@ button.secondary {
   padding: 3px 5px;
 }
 .modal {
+  margin: auto;
   width: min(460px, 90vw);
   padding: 24px;
   background: var(--surface);

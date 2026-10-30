@@ -63,7 +63,7 @@ try {
   assert.equal(await page.evaluate(() => typeof window.require), 'undefined')
   await openChoice(workspace)
   await page.getByRole('button', { name: 'Ouvrir un dossier', exact: true }).first().click()
-  await page.getByRole('button', { name: 'Guide.md', exact: true }).click()
+  await page.getByRole('button', { name: /^Guide\.md(?: |$)/ }).click()
   await expect(page.locator('.prose h1')).toHaveText('Bonjour Studio')
   await expect(page.locator('.prose table')).toHaveCount(1)
   await expect(page.locator('.prose .katex')).toHaveCount(1)
@@ -85,7 +85,7 @@ try {
     .toBe(true)
   await page.getByRole('button', { name: 'Deuxième.md', exact: true }).click()
   await expect(editor()).toContainText('Deuxième document')
-  await page.getByRole('tab', { name: 'Guide.md', exact: true }).click()
+  await page.getByRole('tab', { name: /^Guide\.md(?: |$)/ }).click()
   await expect(editor()).toContainText('Texte sauvegardé automatiquement.')
   await page.getByRole('button', { name: 'Éditeur', exact: true }).click()
   await expect(page.locator('.preview-panel')).toHaveCount(0)
@@ -151,7 +151,67 @@ try {
   await expect(page.getByRole('tab', { name: 'Renommé.md', exact: true })).toBeVisible()
   console.log('OK création fichier/dossier, renommage et annulation de suppression')
 
-  await page.getByRole('tab', { name: 'Guide.md', exact: true }).click()
+  const modifier = process.platform === 'darwin' ? 'Meta' : 'Control'
+  await page.keyboard.press(`${modifier}+p`)
+  const paletteBox = await page.getByRole('dialog').boundingBox()
+  assert.ok(
+    paletteBox && paletteBox.x > 0 && paletteBox.y > 0,
+    'La palette doit être centrée dans la fenêtre',
+  )
+  await page.getByRole('combobox', { name: 'Rechercher un fichier' }).fill('guide')
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('tab', { name: /^Guide\.md(?: |$)/ })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
+  const navigationDocument =
+    '# Navigation\n\n## Section\n\nUn mot très repérable.\n\n## Section\n\nDeuxième partie avec repérable.\n\n```md\n# Faux titre\n```\n'
+  await edit(navigationDocument)
+  await page.keyboard.press(`${modifier}+Shift+f`)
+  const workspaceQuery = page.getByRole('textbox', {
+    name: 'Rechercher dans le workspace',
+    exact: true,
+  })
+  await expect(workspaceQuery).toBeFocused()
+  await workspaceQuery.fill('repérable')
+  await expect(page.locator('.search-result')).toHaveCount(2)
+  await page.locator('.search-result').nth(1).click()
+  await expect(page.locator('.cm-lineNumbers .cm-activeLineGutter')).toHaveText('9')
+  await expect(editor()).toContainText('Un mot très repérable.')
+  await edit(navigationDocument.replace('Deuxième partie avec repérable.', 'Deuxième partie.'))
+  await expect(page.locator('.search-result')).toHaveCount(1)
+  await workspaceQuery.fill('REPÉRABLE')
+  await page.getByRole('button', { name: 'Respecter la casse' }).click()
+  await expect(page.locator('.search-result')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Respecter la casse' }).click()
+  await expect(page.locator('.search-result')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Sommaire', exact: true }).click()
+  await expect(page.locator('.outline-entry')).toHaveCount(3)
+  await page.locator('.outline-entry').filter({ hasText: 'Section' }).nth(1).click()
+  await expect(page.locator('.cm-lineNumbers .cm-activeLineGutter')).toHaveText('7')
+  await expect(page.locator('.prose #section-2')).toHaveCount(1)
+  await page.keyboard.press(`${modifier}+p`)
+  await page.getByRole('combobox', { name: 'Rechercher un fichier' }).fill('deuxieme')
+  await page.keyboard.press('Enter')
+  await expect(editor()).toContainText('Deuxième document')
+  await page.keyboard.press(`${modifier}+p`)
+  await page.getByRole('combobox', { name: 'Rechercher un fichier' }).fill('guide')
+  await page.keyboard.press('Enter')
+  await expect(editor()).toContainText('Deuxième partie.')
+  await page.keyboard.press(`${modifier}+k`)
+  await page.getByRole('combobox', { name: 'Rechercher une commande' }).fill('vue apercu')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.editor-panel')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Ouvrir la palette de commandes' }).click()
+  await page.getByRole('combobox', { name: 'Rechercher une commande' }).fill('vue partagee')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.editor-panel')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Explorateur', exact: true }).click()
+  console.log(
+    'OK recherche workspace avec brouillons, navigation par ligne, sommaire et palette clavier',
+  )
+
+  await page.getByRole('tab', { name: /^Guide\.md(?: |$)/ }).click()
   await edit(initial + '\n![Pixel](pixel.png)\n')
   await page.getByRole('button', { name: 'Enregistrer', exact: true }).click()
   await waitDisk(initial + '\n![Pixel](pixel.png)\n')
@@ -232,7 +292,7 @@ try {
   app = null
   await launch()
   await expect(page.getByRole('tab')).toHaveCount(3)
-  await expect(page.getByRole('tab', { name: 'Guide.md', exact: true })).toHaveAttribute(
+  await expect(page.getByRole('tab', { name: /^Guide\.md(?: |$)/ })).toHaveAttribute(
     'aria-selected',
     'true',
   )

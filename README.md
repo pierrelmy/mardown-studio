@@ -26,11 +26,11 @@ Markdown Studio réunit un éditeur Markdown, un explorateur de dossiers et un a
 qui se met à jour pendant la saisie. Vos documents restent des fichiers `.md`
 classiques, lisibles avec vos autres outils.
 
-| Écrire                                          | Organiser                            | Partager                            |
-| ----------------------------------------------- | ------------------------------------ | ----------------------------------- |
-| Éditeur CodeMirror avec coloration et recherche | Dossiers locaux et onglets multiples | Export PDF et HTML                  |
-| Aperçu Markdown, KaTeX et Mermaid               | Création, renommage et corbeille     | Quatre thèmes de document           |
-| Modes éditeur, aperçu et vue partagée           | Autosave et signalement des conflits | Typographie et formats A4 ou Letter |
+| Écrire                                          | Organiser                                | Partager                            |
+| ----------------------------------------------- | ---------------------------------------- | ----------------------------------- |
+| Éditeur CodeMirror avec coloration et recherche | Recherche workspace et onglets multiples | Export PDF et HTML                  |
+| Aperçu Markdown, KaTeX et Mermaid               | Création, renommage et corbeille         | Quatre thèmes de document           |
+| Modes éditeur, aperçu et vue partagée           | Autosave et signalement des conflits     | Typographie et formats A4 ou Letter |
 
 ## Installer depuis GitHub
 
@@ -99,6 +99,36 @@ Les onglets indiquent les modifications non enregistrées. Si un fichier est mod
 par une autre application, un onglet propre est rechargé ; un onglet modifié signale
 un conflit et permet de recharger le fichier ou d’enregistrer une copie.
 
+## Retrouver vos idées et naviguer
+
+La barre latérale propose trois panneaux : **Explorateur**, **Recherche workspace** et
+**Sommaire**. La recherche parcourt les fichiers Markdown du dossier ouvert et inclut
+les modifications non sauvegardées des fichiers du workspace ouverts dans des onglets. Chaque résultat affiche son fichier,
+sa ligne et un extrait surligné ; un clic ouvre le document à la bonne position.
+L’option **Respecter la casse** permet d’affiner les résultats et le bouton d’actualisation
+relance la recherche après un changement externe.
+
+Le sommaire suit les titres du document pendant la rédaction. Un clic rejoint le titre
+dans l’éditeur et dans l’aperçu. Les titres répétés reçoivent des ancres distinctes, aussi
+conservées dans l’export HTML ; les faux titres des blocs de code et de formules sont ignorés.
+
+La **palette de commandes**, accessible par l’icône de commande dans la barre supérieure,
+regroupe les actions d’ouverture, de sauvegarde, d’affichage, de style et d’export.
+Son onglet **Fichiers** permet d’ouvrir rapidement un document du workspace par son nom
+ou son chemin. Utilisez les flèches, Entrée et Échap pour naviguer au clavier.
+
+| Action                       | macOS        | Windows / Linux        |
+| ---------------------------- | ------------ | ---------------------- |
+| Ouvrir la palette            | ⌘ K ou ⌘ ⇧ P | Ctrl K ou Ctrl Shift P |
+| Ouvrir rapidement un fichier | ⌘ P          | Ctrl P                 |
+| Rechercher dans le workspace | ⌘ ⇧ F        | Ctrl Shift F           |
+| Rechercher dans le document  | ⌘ F          | Ctrl F                 |
+
+La recherche workspace est une recherche de texte littéral, sans syntaxe d’expression
+régulière. Elle est limitée à 300 correspondances et à 50 Mo lus par requête ; les fichiers
+ignorés et les limites atteintes sont signalés. Les requêtes précédentes sont annulées
+lorsqu’une nouvelle recherche est lancée. Aucun document n’est envoyé à un service de recherche.
+
 ## Une identité visuelle pour chaque document
 
 Le thème du document est indépendant du thème clair ou sombre de l’interface.
@@ -150,7 +180,7 @@ en mode développement.
 - Fichiers de 20 Mo maximum ; 20 000 entrées et 24 niveaux de profondeur par workspace.
 - Fichiers cachés, liens symboliques et `node_modules` exclus de l’explorateur ; SVG locaux non chargés.
 - Les images locales autorisées et les polices KaTeX sont intégrées aux exports HTML ; les images HTTPS restent distantes.
-- La recherche globale, les liens entre documents, la palette de commandes et le Live Preview intégré restent des évolutions.
+- Les liens entre documents et le Live Preview intégré restent des évolutions.
 
 </details>
 

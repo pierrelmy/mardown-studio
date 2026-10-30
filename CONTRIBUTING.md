@@ -53,6 +53,7 @@ electron/
   update-helper.cjs             Remplacement du bundle et restauration macOS
   services/
     file.service.ts             Autorisations, révisions et sauvegardes
+    search.service.ts           Recherche bornée et annulable dans le workspace
     session.service.ts          Chemins et préférences persistantes
     export.service.ts           Export HTML et impression PDF
     update.service.ts           États et coordination des mises à jour
@@ -63,6 +64,7 @@ shared/
   types.ts                      Contrats IPC et données des documents
   document-themes.ts            Catalogue et tokens des thèmes
   updates.ts                    États et notes de version
+  search.ts                     Correspondances et recherche littérale partagée
 src/
   components/                   Interface, éditeur et aperçu
   hooks/useStudio.ts            Cycle de vie des documents
@@ -71,6 +73,12 @@ src/
 scripts/                        Rapports CI et préparation des releases
 tests/                          Tests unitaires, desktop et installateur
 ```
+
+La recherche conserve les accès disque dans le processus principal. Le renderer remplace
+les résultats des fichiers modifiés par ceux de leurs buffers courants ; il ne lit pas
+le disque directement. Les réponses obsolètes sont ignorées et les requêtes remplacées
+sont annulées. `src/services/headings.ts` partage le calcul des ancres entre sommaire,
+aperçu et export, avec des identifiants uniques par document.
 
 Les composants restent spécialisés ; les opérations système appartiennent au processus
 principal. Les styles d’aperçu et d’export partagent le catalogue de thèmes. Les polices
