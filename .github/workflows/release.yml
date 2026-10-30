@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.version.outputs.publish }}
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Version et changelog depuis les commits
+        id: version
+        run: npm run release:plan
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-plan
+          path: release-plan/
+          retention-days: 3
+
+  packages:
+    needs: plan
+    if: needs.plan.outputs.publish == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: --mac --universal
+          - os: windows-latest
+            target: --win --x64
+          - os: ubuntu-latest
+            target: --linux --x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      STUDIO_RELEASE_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Appliquer la version aux paquets
+        env:
+          RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+        run: npm version "$env:RELEASE_VERSION" --no-git-tag-version --ignore-scripts
+        if: runner.os == 'Windows'
+      - name: Appliquer la version aux paquets
+        if: runner.os != 'Windows'
+        env:
+          RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+        run: npm version "$RELEASE_VERSION" --no-git-tag-version --ignore-scripts
+      - name: Compiler les installateurs et les métadonnées de mise à jour
+        run: npm run dist:release -- ${{ matrix.target }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-${{ matrix.os }}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.exe
+            release/*.AppImage
+            release/*.deb
+            release/*.blockmap
+            release/latest*.yml
+          if-no-files-found: error
+          retention-days: 3
+
+  publish:
+    needs: [plan, packages]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_REPOSITORY: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.plan.outputs.tag }}
+      RELEASE_VERSION: ${{ needs.plan.outputs.version }}
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+      SOURCE_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-plan
+          path: release-plan
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: release-*-latest
+          path: release-assets
+          merge-multiple: true
+      - name: Publier une release complète et son changelog
+        shell: bash
+        run: |
+          if existing_draft=$(gh release view "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --json isDraft --jq '.isDraft' 2>/dev/null); then
+            if [[ "$existing_draft" == "false" ]]; then
+              echo "La release est déjà publiée."
+              exit 0
+            fi
+            gh release upload "$RELEASE_TAG" release-assets/* --repo "$RELEASE_REPOSITORY" --clobber
+            gh release edit "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --target "$SOURCE_SHA" --title "Markdown Studio $RELEASE_VERSION" --notes-file release-plan/notes.md
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --repo "$RELEASE_REPOSITORY" --target "$SOURCE_SHA" --title "Markdown Studio $RELEASE_VERSION" --notes-file release-plan/notes.md --draft
+          fi
+          gh release edit "$RELEASE_TAG" --repo "$RELEASE_REPOSITORY" --draft=false --latest

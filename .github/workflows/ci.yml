@@ -100,6 +100,9 @@ jobs:
           retention-days: 7
       - name: Packaging natif
         run: npm run pack
+      - name: Tester le remplacement et le redémarrage du paquet macOS
+        if: runner.os == 'macOS'
+        run: npm run test:installer
       - name: Archiver le paquet en préservant les permissions
         shell: bash
         run: tar -czf markdown-studio-${{ runner.os }}-${{ runner.arch }}.tar.gz -C release .

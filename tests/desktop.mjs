@@ -267,6 +267,70 @@ try {
   console.log(
     'OK nouveau brouillon, fermeture fenêtre protégée, Enregistrer sous et ouverture hors workspace',
   )
+  // Update UI uses deterministic IPC replies; filesystem and dirty-document guards stay real.
+  await page.getByRole('button', { name: 'Versions et mises à jour', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Vérifier', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Fermer la boîte de dialogue', exact: true }).click()
+  await page.getByRole('button', { name: 'Nouveau document', exact: true }).click()
+  await edit('# À sauvegarder avant mise à jour\n')
+  const updateDraft = join(root, 'Avant-mise-a-jour.md')
+  await saveChoice(updateDraft)
+  await app.evaluate(({ ipcMain, BrowserWindow }) => {
+    const state = {
+      currentVersion: '0.1.0',
+      latestVersion: '0.3.0',
+      phase: 'available',
+      releases: [
+        {
+          version: '0.3.0',
+          notes: '## Nouveautés\n\nThèmes améliorés.\n\n<script>alert(1)</script>',
+          publishedAt: null,
+        },
+        { version: '0.2.0', notes: 'Corrections de sauvegarde.', publishedAt: null },
+      ],
+      progress: 0,
+      message: null,
+      canInstall: true,
+      installationNotice: null,
+      releaseURL: 'https://github.com/pierrelmy/mardown-studio/releases',
+    }
+    const send = () =>
+      BrowserWindow.getAllWindows()[0].webContents.send('studio:update-state', state)
+    ipcMain.removeHandler('studio:downloadUpdate')
+    ipcMain.handle('studio:downloadUpdate', async () => {
+      state.phase = 'downloaded'
+      state.progress = 100
+      send()
+      return { ok: true, value: state }
+    })
+    ipcMain.removeHandler('studio:installUpdate')
+    ipcMain.handle('studio:installUpdate', async () => {
+      globalThis.__testInstallCount = (globalThis.__testInstallCount ?? 0) + 1
+      return { ok: true }
+    })
+    send()
+  })
+  await expect(page.getByLabel('Changements depuis la version installée')).toContainText('0.3.0')
+  await expect(page.getByLabel('Changements depuis la version installée')).toContainText('0.2.0')
+  await expect(page.locator('.release-notes script')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Télécharger la mise à jour', exact: true }).click()
+  await page.getByRole('button', { name: 'Installer et relancer', exact: true }).click()
+  await page.getByRole('button', { name: 'Annuler', exact: true }).click()
+  assert.equal(await app.evaluate(() => globalThis.__testInstallCount ?? 0), 0)
+  await page.getByRole('button', { name: 'Installer et relancer', exact: true }).click()
+  await page
+    .getByRole('dialog')
+    .filter({
+      has: page.getByRole('heading', { name: 'Enregistrer les modifications ?', exact: true }),
+    })
+    .getByRole('button', { name: 'Enregistrer', exact: true })
+    .click()
+  await expect.poll(() => app.evaluate(() => globalThis.__testInstallCount ?? 0)).toBe(1)
+  assert.equal(await fs.readFile(updateDraft, 'utf8'), '# À sauvegarder avant mise à jour\n')
+  assert.deepEqual(errors, [])
+  console.log(
+    'OK changelog complet, téléchargement explicite et installation annulable protégeant les brouillons',
+  )
   console.log(`Artefacts de vérification : ${artifacts}`)
 } catch (error) {
   if (page) await page.screenshot({ path: join(artifacts, 'failure.png') }).catch(() => {})

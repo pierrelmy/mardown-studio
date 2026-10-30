@@ -98,6 +98,8 @@ npm run test:desktop  # compilation + tests dans une vraie fenêtre Electron
 npm run format        # formater les sources
 npm run pack          # application non installée dans release/
 npm run dist          # paquet distribuable pour la plateforme courante
+npm run release:plan  # calcul local de la prochaine version et de son changelog
+npm run test:installer # test macOS après npm run pack : remplacement et relance réels
 ```
 
 Les tests unitaires utilisent de vrais fichiers temporaires. Les tests desktop
@@ -202,10 +204,100 @@ npm run dist -- --linux    # AppImage et DEB
 ```
 
 Le build macOS local utilise une signature ad hoc (`identity: "-"`), sans utiliser de
-certificat personnel. Une diffusion publique macOS nécessite un certificat Developer ID
-et une notarisation configurés par le responsable de publication. Les certificats et
-secrets de signature ne sont pas inclus dans le dépôt. Windows et Linux disposent de
+certificat personnel. Les releases macOS suivent ici le même choix, sans compte Apple
+Developer : leur mise à jour utilise l’installateur dédié décrit ci-dessous. Une
+signature Developer ID et une notarisation restent recommandées pour une distribution
+publique sans avertissement Gatekeeper. Aucun certificat ou secret n’est inclus dans
+l’application. Windows et Linux disposent de
 cibles configurées et d’une CI de compilation, mais doivent être validés sur leur OS.
 
 Le cahier des charges source reste dans `docs/`, ignoré conformément au `.gitignore`
 initial du dépôt.
+
+## Versions et mises à jour automatiques
+
+Le workflow **Release** démarre après une CI réussie sur un push de `main`. Les PR
+n’effectuent aucune publication. Le dépôt public de distribution est
+[pierrelmy/mardown-studio](https://github.com/pierrelmy/mardown-studio/releases).
+
+Les commits depuis le dernier tag publié déterminent la prochaine version :
+
+| Commits inclus                                         | Évolution                             |
+| ------------------------------------------------------ | ------------------------------------- |
+| `feat:` ou `feat(scope):`                              | Mineure, par exemple 0.2.0 → 0.3.0    |
+| `type!:` ou corps contenant `BREAKING CHANGE:`         | Majeure, par exemple 0.3.0 → 1.0.0    |
+| Tous les autres, y compris `fix:`, `docs:` et `chore:` | Corrective, par exemple 0.3.0 → 0.3.1 |
+
+Chaque push validé produit une release couvrant tous les commits non encore publiés.
+Plusieurs commits dans un même push sont regroupés et l’évolution la plus importante
+l’emporte. Le tag est attaché au commit exact validé par la CI. La version est appliquée
+à `package.json` et au lockfile dans les runners de build, sans commit de bot dans les
+sources ni boucle de publication. La version source sert de base avant le premier tag.
+`npm run release:plan` permet de consulter le calcul dans `release-plan/` sans publier.
+
+Les paquets macOS universels (Apple Silicon et Intel), Windows x64 et Linux x64 sont
+construits séparément. La release n’est rendue publique qu’une fois tous les paquets
+construits et envoyés, avec le changelog et les métadonnées de mise à jour. Le workflow
+utilise le `GITHUB_TOKEN` du job de publication avec `contents: write`, sans secret
+personnel pour ce dépôt public. Les premières exécutions de publication devront être
+vérifiées dans GitHub Actions.
+
+### Dans l’application
+
+Au démarrage d’une application installée, une vérification cherche une release stable
+plus récente. Le bouton de version dans la barre d’état ouvre **Versions et mises à
+jour** ; une nouvelle version ouvre également cette fenêtre si aucun autre dialogue
+n’est actif. Le changelog paginé inclut toutes les releases stables strictement après
+la version installée et jusqu’à la dernière version, dans l’ordre décroissant.
+Les versions de brouillon et de prépublication sont exclues.
+
+**Télécharger la mise à jour** prépare le paquet avec une progression visible.
+**Installer et relancer** demande quoi faire des documents non sauvegardés, attend les
+écritures en cours et persiste la session. Une annulation conserve l’application et les
+brouillons. Fermer normalement une application après téléchargement n’installe rien.
+En développement (`npm run dev`), les installations et les vérifications réseau sont
+désactivées ; le numéro de version reste consultable.
+
+La version actuelle sans ce système doit être remplacée **une première fois** par une
+nouvelle build, par exemple avec `npm run dist -- --mac`, ou par la première release
+GitHub contenant ce code. Ensuite les mises à jour sont proposées dans l’application.
+Sur macOS, placez l’application dans un dossier accessible en écriture, typiquement
+`Applications` ; l’application lancée depuis un DMG monté n’est pas remplaçable.
+
+### Installateur macOS sans compte Apple
+
+Le mécanisme natif Squirrel nécessite une identité de signature cohérente. Pour cet
+usage personnel sans certificat Developer ID, un helper dédié est copié hors de
+`app.asar` et utilise le mode Node d’Electron pour réaliser le remplacement :
+
+1. Le ZIP doit provenir du dépôt GitHub configuré et correspondre à l’architecture.
+2. Sa taille et son empreinte SHA-256 sont comparées aux métadonnées de l’API GitHub.
+3. Les chemins de l’archive sont contrôlés, puis le bundle est extrait dans un dossier
+   temporaire voisin de l’application. L’identifiant `studio.markdown.app`, la version,
+   l’architecture, la validité de la signature ad hoc et les liens symboliques sont vérifiés.
+4. Après l’accord concernant les documents, le helper attend la fermeture du processus.
+   L’ancien bundle est renommé en sauvegarde, puis remplacé par le bundle préparé.
+5. Le nouveau processus est lancé avec le même profil. Il confirme son démarrage quand
+   l’interface et la restauration de session sont initialisées.
+6. Sans confirmation sous deux minutes, ou en cas d’échec de lancement, le helper arrête
+   le nouveau processus, restaure l’ancien bundle et le relance. La sauvegarde n’est
+   supprimée qu’après la confirmation d’un démarrage réussi. Si le helper garde encore
+   un fichier ouvert, la nouvelle application termine le nettoyage en arrière-plan.
+
+Les fichiers Markdown restent en dehors du bundle et ne sont pas remplacés. Les logs
+et marqueurs sont dans `updates/` sous le profil Electron, avec `last-result.json` pour
+le résultat de l’installation. Les préparations abandonnées sont nettoyées au prochain
+lancement. La restauration couvre l’installation et le démarrage initial, pas une panne
+qui surviendrait après la confirmation d’initialisation.
+
+La confiance du téléchargement repose sur HTTPS et les métadonnées du dépôt GitHub :
+la signature ad hoc ne prouve pas une identité Apple. Ce mécanisme ne remplace pas une
+notarisation et n’essaie pas de modifier les réglages de sécurité de macOS. Gatekeeper
+peut demander une autorisation lors de la première installation manuelle.
+Windows utilise l’updater NSIS ; Linux utilise `electron-updater` pour les AppImage.
+
+Le test `npm run test:installer` crée des copies temporaires d’un vrai paquet macOS,
+prépare un ZIP réel, vérifie son intégrité et son bundle, le remplace puis contrôle la
+relance et la confirmation du nouveau processus. Les tests unitaires simulent aussi
+un échec de démarrage et vérifient la restauration de l’ancienne application. La CI
+macOS exécute ce test après son packaging.
