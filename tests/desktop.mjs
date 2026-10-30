@@ -125,6 +125,7 @@ try {
   await page.getByRole('textbox', { name: 'Nom' }).fill('Création')
   await page.getByRole('button', { name: 'Créer', exact: true }).click()
   await expect(editor()).toHaveText('')
+  await expect(page.locator('.app-body')).toHaveAttribute('aria-busy', 'false')
   const created = join(workspace, 'Création.md')
   assert.equal(await fs.readFile(created, 'utf8'), '')
   await page.getByRole('button', { name: 'Actions pour Création.md' }).click()
@@ -132,9 +133,13 @@ try {
   await page.getByRole('textbox', { name: 'Nom' }).fill('Renommé.md')
   await page.getByRole('dialog').getByRole('button', { name: 'Renommer', exact: true }).click()
   await expect(page.getByRole('tab', { name: 'Renommé.md', exact: true })).toBeVisible()
+  await expect(page.locator('.app-body')).toHaveAttribute('aria-busy', 'false')
   await page.getByRole('button', { name: 'Créer un dossier dans le workspace' }).click()
   await page.getByRole('textbox', { name: 'Nom' }).fill('Notes')
   await page.getByRole('button', { name: 'Créer', exact: true }).click()
+  // A click only submits the dialog; await the IPC operation and refreshed tree.
+  await expect(page.getByRole('button', { name: 'Notes', exact: true })).toBeVisible()
+  await expect(page.locator('.app-body')).toHaveAttribute('aria-busy', 'false')
   assert.equal((await fs.stat(join(workspace, 'Notes'))).isDirectory(), true)
   // Cancel deletion through the same native confirmation used in production.
   await app.evaluate(({ dialog }) => {
@@ -142,6 +147,7 @@ try {
   })
   await page.getByRole('button', { name: 'Actions pour Renommé.md' }).click()
   await page.getByRole('button', { name: 'Supprimer…', exact: true }).click()
+  await expect(page.locator('.app-body')).toHaveAttribute('aria-busy', 'false')
   await expect(page.getByRole('tab', { name: 'Renommé.md', exact: true })).toBeVisible()
   console.log('OK création fichier/dossier, renommage et annulation de suppression')
 
