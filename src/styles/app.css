@@ -87,3 +87,25 @@ button.secondary { border: 1px solid var(--line); padding: 9px 13px; background:
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media(max-width: 1100px) { .view-switch button span { display: none; } .toolbar { gap: 10px; padding: 0 12px; } .sidebar { width: 220px; } }
+.document-area { flex: 1; min-height: 0; display: flex; }
+.editor-panel, .preview-panel { min-width: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.panel-label { height: 41px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 25px; font-size: 9px; letter-spacing: 1.5px; color: var(--muted); }
+.panel-label span:last-child { font-size: 9px; letter-spacing: .2px; opacity: .7; }
+.editor-host { flex: 1; min-height: 0; overflow: hidden; }
+.editor-host .cm-editor { height: 100%; background: transparent; color: var(--text); font-size: 13px; }
+.editor-host .cm-scroller { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; line-height: 1.9; overflow: auto; }
+.editor-host .cm-content { padding: 12px 20px 80px 10px; caret-color: var(--accent); }
+.editor-host .cm-line { padding-left: 5px; }
+.editor-host .cm-gutters { background: transparent; color: var(--muted); border: 0; font-size: 10px; min-width: 42px; opacity: .6; }
+.editor-host .cm-gutterElement { padding-left: 14px; }
+.editor-host .cm-activeLine, .editor-host .cm-activeLineGutter { background: var(--hover); }
+.editor-host .cm-selectionBackground, .editor-host .cm-focused .cm-selectionBackground { background: var(--accent-bg) !important; }
+.editor-host .cm-cursor { border-left-color: var(--accent); }
+.editor-host .cm-panels { background: var(--panel); color: var(--text); border-color: var(--line); }
+.editor-host .cm-search input { background: var(--surface); color: var(--text); border: 1px solid var(--line); padding: 3px 5px; }
+.editor-host .cm-search button { background: var(--hover); color: var(--text); border: 0; }
+.editor-host .cm-tooltip { background: var(--surface); color: var(--text); border-color: var(--line); }
+.preview-scroll { flex: 1; overflow: auto; padding: 20px 45px 80px; }
+.split-handle { width: 5px; cursor: col-resize; border-left: 1px solid var(--line); flex-shrink: 0; background: transparent; outline-offset: -2px; }
+.split-handle:hover, .split-handle:focus { background: var(--accent-bg); }
+.preview-error { color: var(--error); }
