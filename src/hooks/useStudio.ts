@@ -412,17 +412,32 @@ export function useStudio(ask: Ask) {
       })
     })
   }, [ready])
+  const prepareForQuit = async (): Promise<boolean> => {
+    if (operation.current || !ready) return false
+    operation.current = true
+    setBusy(true)
+    try {
+      for (const tab of tabsRef.current) if (!(await approveClose(tab.id))) return false
+      unwrap(await window.studio.session(sessionSnapshot()))
+      return true
+    } catch (error) {
+      report(error)
+      return false
+    } finally {
+      operation.current = false
+      setBusy(false)
+    }
+  }
   useEffect(() => {
     if (!ready || !window.studio) return
     return window.studio.onCloseRequested(() => {
-      void guard(async () => {
-        for (const tab of tabsRef.current) if (!(await approveClose(tab.id))) return
-        unwrap(await window.studio.session(sessionSnapshot()))
-        window.studio.closeReady()
+      void prepareForQuit().then((approved) => {
+        if (approved) window.studio.closeReady()
       })
     })
   }, [ready, preferences])
   return {
+    prepareForQuit,
     tabs,
     activeId,
     active: tabs.find((tab) => tab.id === activeId),

@@ -1,3 +1,4 @@
+import type { UpdateState } from './updates'
 import { defaultDocumentAppearance, type DocumentAppearance } from './document-themes'
 export type Theme = 'dark' | 'light'
 export type ViewMode = 'editor' | 'preview' | 'split'
@@ -39,6 +40,11 @@ export interface Workspace {
 }
 export type Result<T> = { ok: true; value: T } | { ok: false; error: string; code?: string }
 export interface StudioAPI {
+  updateState(): Promise<Result<UpdateState>>
+  checkUpdate(): Promise<Result<UpdateState>>
+  downloadUpdate(): Promise<Result<UpdateState>>
+  installUpdate(): Promise<Result<void>>
+  onUpdateState(callback: (state: UpdateState) => void): () => void
   openFile(): Promise<Result<DiskDocument | null>>
   openWorkspace(): Promise<Result<Workspace | null>>
   tree(): Promise<Result<Workspace | null>>

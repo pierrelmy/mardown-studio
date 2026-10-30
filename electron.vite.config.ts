@@ -5,6 +5,11 @@ import { resolve } from 'node:path'
 
 export default defineConfig({
   main: {
+    define: {
+      __RELEASE_REPOSITORY__: JSON.stringify(
+        process.env.STUDIO_RELEASE_REPOSITORY || 'pierrelmy/mardown-studio',
+      ),
+    },
     plugins: [externalizeDepsPlugin()],
     build: { rollupOptions: { input: resolve('electron/main.ts') } },
   },

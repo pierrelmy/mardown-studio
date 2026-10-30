@@ -1,3 +1,4 @@
+import type { UpdateState } from '../shared/updates'
 import { contextBridge, ipcRenderer } from 'electron'
 import type { StudioAPI } from '../shared/types'
 const invoke = (method: string, ...args: unknown[]) =>
@@ -10,6 +11,17 @@ const listen = (channel: string, callback: () => void) => {
   }
 }
 const api: StudioAPI = {
+  updateState: () => invoke('updateState'),
+  checkUpdate: () => invoke('checkUpdate'),
+  downloadUpdate: () => invoke('downloadUpdate'),
+  installUpdate: () => invoke('installUpdate'),
+  onUpdateState: (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, state: UpdateState) => callback(state)
+    ipcRenderer.on('studio:update-state', listener)
+    return () => {
+      ipcRenderer.removeListener('studio:update-state', listener)
+    }
+  },
   openFile: () => invoke('openFile'),
   openWorkspace: () => invoke('openWorkspace'),
   tree: () => invoke('tree'),

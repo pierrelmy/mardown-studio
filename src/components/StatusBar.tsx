@@ -1,13 +1,16 @@
+import type { ReactNode } from 'react'
 import { Check, Circle, LoaderCircle, AlertCircle } from 'lucide-react'
 import type { Tab } from './Tabs'
 export function StatusBar({
   tab,
   autosave,
   toggleAutosave,
+  updates,
 }: {
   tab?: Tab
   autosave: boolean
   toggleAutosave: () => void
+  updates?: ReactNode
 }) {
   const content = tab?.content ?? ''
   const state = tab?.state ?? 'saved'
@@ -45,6 +48,7 @@ export function StatusBar({
         <span>{content.split('\n').length} lignes</span>
         <span>UTF-8</span>
       </div>
+      {updates}
     </footer>
   )
 }

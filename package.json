@@ -13,13 +13,16 @@
     "build": "npm run typecheck && electron-vite build",
     "test": "vitest run",
     "test:desktop": "install-electron && npm run build && node tests/desktop.mjs",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
+    "pack": "npm run build && electron-builder --dir --publish never",
+    "dist": "npm run build && electron-builder --publish never",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run typecheck && npm test",
     "test:coverage": "vitest run --coverage",
-    "coverage:summary": "node scripts/coverage-summary.mjs"
+    "coverage:summary": "node scripts/coverage-summary.mjs",
+    "release:plan": "node scripts/prepare-release.mjs",
+    "dist:release": "npm run build && electron-builder --config electron-builder.release.cjs --publish never",
+    "test:installer": "node tests/installer-desktop.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
@@ -53,7 +56,20 @@
         "deb"
       ],
       "category": "Office"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "pierrelmy",
+        "repo": "mardown-studio"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "electron/update-helper.cjs",
+        "to": "update-helper.cjs"
+      }
+    ]
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
@@ -66,13 +82,15 @@
     "@lezer/highlight": "^1.2.5",
     "codemirror": "^6.0.2",
     "dompurify": "^3.4.17",
+    "electron-updater": "^6.8.11",
     "highlight.js": "^11.12.0",
     "katex": "^0.19.1",
     "lucide-react": "^1.65.0",
     "marked": "^18.1.2",
     "mermaid": "^12.2.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "semver": "^7.8.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
@@ -81,6 +99,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@types/semver": "^7.8.0",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.5",
     "electron": "^45.2.0",

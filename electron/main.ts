@@ -1,5 +1,11 @@
+import { createUpdateBackend } from './services/update-backend'
+import { UpdateService } from './services/update.service'
+import { fetchReleaseNotes } from './services/release-notes.service'
+declare const __RELEASE_REPOSITORY__: string
 import { app, BrowserWindow, ipcMain, dialog, shell, protocol, Menu } from 'electron'
-import { join } from 'node:path'
+import { join, dirname } from 'node:path'
+import { promises as fs } from 'node:fs'
+import { createMacUpdateBackend, cleanupMacUpdateFiles } from './services/mac-update.service'
 import { FileService, stringArgument, StudioError } from './services/file.service'
 import { loadSession, parseSession, writeSession } from './services/session.service'
 import { exportDocument } from './services/export.service'
@@ -17,6 +23,7 @@ let allowClose = false
 let closing = false
 let persistQueue = Promise.resolve()
 let sessionPath: string
+let updates: UpdateService
 function createWindow() {
   const win = new BrowserWindow({
     width: 1440,
@@ -97,6 +104,67 @@ app.whenReady().then(async () => {
       })
     } catch {
       return new Response(null, { status: 403 })
+    }
+  })
+  const canInstall =
+    app.isPackaged &&
+    (process.platform === 'darwin' || process.platform === 'win32' || Boolean(process.env.APPIMAGE))
+  updates = new UpdateService(
+    process.platform === 'darwin'
+      ? createMacUpdateBackend({
+          repository: __RELEASE_REPOSITORY__,
+          version: app.getVersion(),
+          appPath: dirname(dirname(dirname(process.execPath))),
+          userData: app.getPath('userData'),
+          resourcesPath: process.resourcesPath,
+          executable: process.execPath,
+          arch: process.arch,
+          quit: () => app.quit(),
+        })
+      : createUpdateBackend(),
+    (current, latest) => fetchReleaseNotes(__RELEASE_REPOSITORY__, current, latest),
+    (state) => {
+      if (window && !window.isDestroyed()) window.webContents.send('studio:update-state', state)
+    },
+    {
+      version: app.getVersion(),
+      repository: __RELEASE_REPOSITORY__,
+      packaged: app.isPackaged,
+      canInstall,
+      reason: app.commandLine.hasSwitch('studio-update-failed')
+        ? 'La nouvelle version n’a pas démarré. L’ancienne application a été restaurée automatiquement. Le journal se trouve dans le dossier updates du profil.'
+        : !app.isPackaged
+          ? 'Les mises à jour sont disponibles dans l’application installée.'
+          : !canInstall
+            ? 'Cette installation ne permet pas les mises à jour automatiques. Sur Linux, utilisez l’AppImage.'
+            : undefined,
+    },
+  )
+  register('updateState', async () => {
+    const token = app.commandLine.getSwitchValue('studio-update-token')
+    if (app.isPackaged && /^[a-f0-9-]{36}$/.test(token)) {
+      const directory = join(app.getPath('userData'), 'updates')
+      await fs.mkdir(directory, { recursive: true, mode: 0o700 })
+      await fs.writeFile(
+        join(directory, `${token}.ready`),
+        JSON.stringify({ version: app.getVersion() }),
+        { mode: 0o600 },
+      )
+    }
+    return updates.snapshot()
+  })
+  register('checkUpdate', async () => updates.check())
+  register('downloadUpdate', async () => updates.download())
+  register('installUpdate', async () => {
+    await persistQueue
+    if (updates.snapshot().phase !== 'downloaded')
+      throw new StudioError('Aucune mise à jour téléchargée.', 'INVALID')
+    allowClose = true
+    try {
+      await updates.install()
+    } catch (error) {
+      allowClose = false
+      throw error
     }
   })
   register('openFile', async () => {
@@ -241,9 +309,17 @@ app.whenReady().then(async () => {
       },
     ]),
   )
-  createWindow()
+  const win = createWindow()
+  win.webContents.once('did-finish-load', () => {
+    if (app.isPackaged) void updates.check()
+  })
   const poll = setInterval(() => {
     if (window && !window.isDestroyed()) window.webContents.send('studio:disk-change')
+    if (app.isPackaged && process.platform === 'darwin')
+      void cleanupMacUpdateFiles(
+        app.getPath('userData'),
+        dirname(dirname(dirname(process.execPath))),
+      )
   }, 2500)
   poll.unref()
 })

@@ -5,7 +5,12 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['electron/**/*.ts', 'src/**/*.{ts,tsx}', 'shared/**/*.ts'],
+      include: [
+        'electron/**/*.{ts,cjs}',
+        'src/**/*.{ts,tsx}',
+        'shared/**/*.ts',
+        'scripts/release-version.mjs',
+      ],
       exclude: ['**/*.d.ts'],
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: 'coverage',

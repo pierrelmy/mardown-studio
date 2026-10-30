@@ -1,3 +1,4 @@
+import { UpdateCenter } from './components/UpdateCenter'
 import { DocumentAppearancePanel, PageSizeControl } from './components/DocumentAppearance'
 import { documentThemes } from '../shared/document-themes'
 import { useEffect, useRef, useState } from 'react'
@@ -282,6 +283,7 @@ export default function App() {
         </main>
       </div>
       <StatusBar
+        updates={studio.ready && <UpdateCenter prepareForQuit={studio.prepareForQuit} />}
         tab={active}
         autosave={preferences.autosave}
         toggleAutosave={() => studio.update({ autosave: !preferences.autosave })}
