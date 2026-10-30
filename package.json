@@ -1,0 +1,85 @@
+{
+  "name": "markdown-studio",
+  "version": "0.1.0",
+  "description": "Un éditeur Markdown local, rapide et soigné",
+  "author": "Markdown Studio",
+  "private": true,
+  "type": "module",
+  "main": "out/main/main.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && electron-vite build",
+    "test": "vitest run",
+    "test:desktop": "npm run build && node tests/desktop.mjs",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "build": {
+    "appId": "studio.markdown.app",
+    "productName": "Markdown Studio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office"
+    }
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language-data": "^6.5.2",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.15",
+    "codemirror": "^6.0.2",
+    "dompurify": "^3.4.17",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.19.1",
+    "lucide-react": "^1.65.0",
+    "marked": "^18.1.2",
+    "mermaid": "^12.2.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/katex": "^0.16.8",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^45.2.0",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}
