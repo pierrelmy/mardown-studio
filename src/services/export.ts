@@ -3,7 +3,12 @@ import { renderDiagram } from './diagram'
 import previewCSS from '../styles/preview.css?inline'
 import katexCSS from 'katex/dist/katex.min.css?inline'
 import type { Theme } from '../../shared/types'
-export async function buildExport(content: string, path: string | null, title: string, _theme: Theme): Promise<string> {
+export async function buildExport(
+  content: string,
+  path: string | null,
+  title: string,
+  _theme: Theme,
+): Promise<string> {
   const container = document.createElement('div')
   container.innerHTML = renderMarkdown(content)
   for (const image of container.querySelectorAll('img')) {
@@ -14,8 +19,12 @@ export async function buildExport(content: string, path: string | null, title: s
   const diagrams = container.querySelectorAll('[data-mermaid]')
   if (diagrams.length) {
     for (const diagram of diagrams) {
-      try { const svg = await renderDiagram(diagram.textContent ?? '', 'light'); diagram.outerHTML = `<div class="mermaid-diagram">${svg}</div>` }
-      catch { diagram.textContent = 'Diagramme Mermaid invalide.' }
+      try {
+        const svg = await renderDiagram(diagram.textContent ?? '', 'light')
+        diagram.outerHTML = `<div class="mermaid-diagram">${svg}</div>`
+      } catch {
+        diagram.textContent = 'Diagramme Mermaid invalide.'
+      }
     }
   }
   // Export a portable light page; diagrams use the same light theme for legible printing.
