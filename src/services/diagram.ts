@@ -3,7 +3,11 @@ import type { Theme } from '../../shared/types'
 let sequence = 0
 let queue: Promise<unknown> = Promise.resolve()
 /** Mermaid has global configuration. Serialize preview/export to prevent theme and ID races. */
-export function renderDiagram(source: string, theme: Theme): Promise<string> {
+export function renderDiagram(
+  source: string,
+  theme: Theme,
+  tokens?: Record<string, string>,
+): Promise<string> {
   const job = queue
     .catch(() => {})
     .then(async () => {
@@ -11,7 +15,20 @@ export function renderDiagram(source: string, theme: Theme): Promise<string> {
       mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
-        theme: theme === 'dark' ? 'dark' : 'default',
+        theme: tokens ? 'base' : theme === 'dark' ? 'dark' : 'default',
+        themeVariables: tokens
+          ? {
+              darkMode: theme === 'dark',
+              background: tokens['--doc-background'],
+              primaryColor: tokens['--panel'],
+              primaryTextColor: tokens['--text'],
+              primaryBorderColor: tokens['--accent'],
+              lineColor: tokens['--muted'],
+              secondaryColor: tokens['--hover'],
+              tertiaryColor: tokens['--doc-background'],
+              fontFamily: tokens['--doc-font'],
+            }
+          : undefined,
         maxTextSize: 50000,
         suppressErrorRendering: true,
       })

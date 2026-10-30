@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { renderDiagram } from '../services/diagram'
 import { renderMarkdown, localImageURL } from '../services/markdown'
-import type { Theme } from '../../shared/types'
+import {
+  documentVariables,
+  getDocumentTheme,
+  type DocumentAppearance,
+} from '../../shared/document-themes'
+import type { CSSProperties } from 'react'
 let mermaidQueue = Promise.resolve()
 export function Preview({
   content,
   path,
-  theme,
+  appearance,
 }: {
   content: string
   path: string | null
-  theme: Theme
+  appearance: DocumentAppearance
 }) {
+  const theme = getDocumentTheme(appearance.documentTheme)
   const host = useRef<HTMLDivElement>(null)
   const [rendering, setRendering] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,7 +44,7 @@ export function Preview({
             for (const diagram of diagrams) {
               if (cancelled) return
               try {
-                const svg = await renderDiagram(diagram.textContent ?? '', theme)
+                const svg = await renderDiagram(diagram.textContent ?? '', theme.mode, theme.tokens)
                 diagram.outerHTML = `<div class="mermaid-diagram">${svg}</div>`
               } catch (error) {
                 diagram.className = 'diagram-error'
@@ -66,10 +72,14 @@ export function Preview({
   return (
     <section className="preview-panel">
       <div className="panel-label">
-        <span>APERÇU</span>
+        <span>APERÇU · {theme.name}</span>
         <span>{rendering ? 'Mise à jour…' : 'Rendu en direct'}</span>
       </div>
-      <div className="preview-scroll">
+      <div
+        className="preview-scroll document-surface"
+        data-document-theme={theme.id}
+        style={documentVariables(appearance) as CSSProperties}
+      >
         {error && (
           <p className="preview-error" role="alert">
             {error}

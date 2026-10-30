@@ -1,3 +1,5 @@
+import { DocumentAppearancePanel, PageSizeControl } from './components/DocumentAppearance'
+import { documentThemes } from '../shared/document-themes'
 import { useEffect, useRef, useState } from 'react'
 import { FilePlus2, FolderOpen, X, AlertTriangle, ArrowUpRight } from 'lucide-react'
 import { Toolbar } from './components/Toolbar'
@@ -16,6 +18,7 @@ export default function App() {
   const studio = useStudio(ask)
   const { preferences, active } = studio
   const area = useRef<HTMLDivElement>(null)
+  const [appearanceOpen, setAppearanceOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [exporting, setExporting] = useState(false)
   useEffect(() => {
@@ -58,7 +61,7 @@ export default function App() {
     if (!active) return
     setExporting(true)
     try {
-      const html = await buildExport(active.content, active.path, active.name, preferences.theme)
+      const html = await buildExport(active.content, active.path, active.name, preferences)
       unwrap(await window.studio.export(format, html, active.name))
       setExportOpen(false)
     } catch (error) {
@@ -83,6 +86,7 @@ export default function App() {
         }}
         create={studio.create}
         exportDocument={() => setExportOpen(true)}
+        appearance={() => setAppearanceOpen(true)}
         hasDocument={!!active}
       />
       {studio.error && (
@@ -228,7 +232,7 @@ export default function App() {
                   />
                 )}
                 {preferences.mode !== 'editor' && (
-                  <Preview content={active.content} path={active.path} theme={preferences.theme} />
+                  <Preview content={active.content} path={active.path} appearance={preferences} />
                 )}
               </div>
             </>
@@ -283,6 +287,13 @@ export default function App() {
         toggleAutosave={() => studio.update({ autosave: !preferences.autosave })}
       />
       {dialog}
+      {appearanceOpen && (
+        <DocumentAppearancePanel
+          appearance={preferences}
+          update={studio.update}
+          close={() => setAppearanceOpen(false)}
+        />
+      )}
       {exportOpen && (
         <Modal
           title="Exporter le document"
@@ -294,6 +305,42 @@ export default function App() {
             Le rendu inclut les tableaux, le code, les formules et les diagrammes. Les images
             locales autorisées sont intégrées dans le fichier exporté.
           </p>
+          <div className="appearance-controls export-settings">
+            <label>
+              Thème du document
+              <select
+                aria-label="Thème de l’export"
+                disabled={exporting}
+                value={preferences.documentTheme}
+                onChange={(event) =>
+                  studio.update({
+                    documentTheme: event.target.value as typeof preferences.documentTheme,
+                  })
+                }
+              >
+                {documentThemes.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <PageSizeControl appearance={preferences} update={studio.update} disabled={exporting} />
+          </div>
+          <p className="export-style-summary">
+            Texte {preferences.documentFontSize} px · Interligne{' '}
+            {preferences.documentLineHeight.toFixed(2)} · Même style que l’aperçu
+          </p>
+          <button
+            className="secondary"
+            disabled={exporting}
+            onClick={() => {
+              setExportOpen(false)
+              setAppearanceOpen(true)
+            }}
+          >
+            Personnaliser le style…
+          </button>
           <div className="modal-actions">
             <button
               className="secondary"

@@ -1,3 +1,4 @@
+import { normalizeDocumentAppearance } from '../../shared/document-themes'
 import { promises as fs } from 'node:fs'
 import type { Session } from '../../shared/types'
 import { defaultPreferences } from '../../shared/types'
@@ -11,6 +12,7 @@ export function parseSession(raw: unknown): Session {
       : [],
     activePath: typeof value.activePath === 'string' ? value.activePath : null,
     preferences: {
+      ...normalizeDocumentAppearance(p),
       theme: p.theme === 'light' ? 'light' : 'dark',
       mode: ['editor', 'preview', 'split'].includes(p.mode) ? p.mode : 'split',
       sidebar: p.sidebar !== false,

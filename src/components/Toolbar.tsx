@@ -11,6 +11,7 @@ import {
   FolderOpen,
   FileUp,
   Download,
+  Palette,
 } from 'lucide-react'
 import type { Preferences, ViewMode } from '../../shared/types'
 export function Toolbar({
@@ -21,6 +22,7 @@ export function Toolbar({
   openFolder,
   create,
   exportDocument,
+  appearance,
   hasDocument,
 }: {
   preferences: Preferences
@@ -30,6 +32,7 @@ export function Toolbar({
   openFolder: () => void
   create: () => void
   exportDocument: () => void
+  appearance: () => void
   hasDocument: boolean
 }) {
   const modes: { mode: ViewMode; label: string; icon: typeof Eye }[] = [
@@ -94,6 +97,9 @@ export function Toolbar({
         ))}
       </div>
       <div className="toolbar-end">
+        <button title="Style du document" aria-label="Style du document" onClick={appearance}>
+          <Palette size={17} />
+        </button>
         <button
           title="Exporter"
           aria-label="Exporter"

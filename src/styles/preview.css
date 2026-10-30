@@ -1,10 +1,15 @@
+.document-surface {
+  color-scheme: var(--doc-color-scheme, light);
+  background: var(--doc-background, white);
+  color: var(--text);
+}
 .prose {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--doc-font, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
   color: var(--text, #282c36);
-  font-size: 15px;
-  line-height: 1.85;
+  font-size: var(--doc-font-size, 16px);
+  line-height: var(--doc-line-height, 1.85);
   overflow-wrap: anywhere;
-  max-width: 820px;
+  max-width: var(--doc-width, 820px);
   margin: 0 auto;
 }
 .prose > :first-child {
@@ -17,7 +22,8 @@
 .prose h5,
 .prose h6 {
   line-height: 1.35;
-  font-weight: 650;
+  font-family: var(--doc-heading-font, inherit);
+  font-weight: var(--doc-heading-weight, 650);
   letter-spacing: -0.025em;
   margin: 1.6em 0 0.65em;
   color: var(--text, #282c36);
@@ -89,7 +95,7 @@
   margin: 1.5em 0;
   background: var(--panel, #f5f5f8);
   border: 1px solid var(--line, #dedee5);
-  border-radius: 7px;
+  border-radius: var(--doc-radius, 7px);
   overflow: auto;
   line-height: 1.65;
   white-space: pre;
@@ -157,34 +163,33 @@
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-literal {
-  color: #ad86d6;
+  color: var(--code-keyword, #ad86d6);
 }
 .hljs-string,
 .hljs-attr {
-  color: #82aa85;
+  color: var(--code-string, #82aa85);
 }
 .hljs-number,
 .hljs-symbol {
-  color: #ce9b70;
+  color: var(--code-number, #ce9b70);
 }
 .hljs-comment {
-  color: #858997;
+  color: var(--code-comment, #858997);
 }
 .hljs-title,
 .hljs-built_in {
-  color: #729fc9;
+  color: var(--code-title, #729fc9);
 }
 .hljs-variable {
-  color: #cd8c8c;
+  color: var(--code-number, #cd8c8c);
 }
 @media print {
   body {
     margin: 0;
-    background: white;
+    background: var(--doc-background, white);
   }
   .prose {
-    color: #282c36;
-    font-size: 11pt;
+    color: var(--text, #282c36);
   }
   .prose pre,
   .prose blockquote,

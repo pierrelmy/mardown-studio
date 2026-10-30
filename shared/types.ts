@@ -1,3 +1,4 @@
+import { defaultDocumentAppearance, type DocumentAppearance } from './document-themes'
 export type Theme = 'dark' | 'light'
 export type ViewMode = 'editor' | 'preview' | 'split'
 export interface FileNode {
@@ -11,7 +12,7 @@ export interface DiskDocument {
   content: string
   revision: string
 }
-export interface Preferences {
+export interface Preferences extends DocumentAppearance {
   theme: Theme
   mode: ViewMode
   sidebar: boolean
@@ -25,6 +26,7 @@ export interface Session {
   preferences: Preferences
 }
 export const defaultPreferences: Preferences = {
+  ...defaultDocumentAppearance,
   theme: 'dark',
   mode: 'split',
   sidebar: true,
