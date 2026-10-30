@@ -45,6 +45,7 @@ try {
   await expect(page.locator('.prose h1')).toHaveText('Bonjour Studio')
   await expect(page.locator('.prose table')).toHaveCount(1)
   await expect(page.locator('.prose .katex')).toHaveCount(1)
+  assert.ok(await page.locator('.prose .katex [style]').count() > 0, 'KaTeX positioning styles must survive sanitization')
   await expect(page.locator('.prose .mermaid-diagram svg')).toHaveCount(1)
   await expect(page.locator('.prose .hljs-keyword')).toHaveCount(1)
   await expect(page.locator('.prose img')).toHaveCount(0)

@@ -5,7 +5,8 @@ import { EditorView, keymap } from '@codemirror/view'
 import { markdown } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { indentWithTab } from '@codemirror/commands'
-import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
+import { syntaxHighlighting, HighlightStyle } from '@codemirror/language'
+import { tags } from '@lezer/highlight'
 import type { Theme } from '../../shared/types'
 
 export function Editor({ id, content, theme, change }: { id: string; content: string; theme: Theme; change: (value: string) => void }) {
@@ -20,7 +21,16 @@ export function Editor({ id, content, theme, change }: { id: string; content: st
   useEffect(() => {
     const editor = new EditorView({ parent: host.current!, state: EditorState.create({ doc: initial.current, extensions: [
       basicSetup, markdown({ codeLanguages: languages }), keymap.of([indentWithTab]), EditorView.lineWrapping,
-      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+      syntaxHighlighting(HighlightStyle.define([
+        { tag: tags.heading, color: 'var(--accent)', fontWeight: '600' },
+        { tag: [tags.keyword, tags.modifier], color: 'var(--syntax-purple)' },
+        { tag: [tags.string, tags.special(tags.string)], color: 'var(--syntax-green)' },
+        { tag: [tags.number, tags.bool, tags.atom], color: 'var(--syntax-orange)' },
+        { tag: [tags.link, tags.url, tags.function(tags.variableName)], color: 'var(--syntax-blue)' },
+        { tag: [tags.comment, tags.meta, tags.processingInstruction], color: 'var(--muted)' },
+        { tag: tags.strong, fontWeight: 'bold' }, { tag: tags.emphasis, fontStyle: 'italic' },
+        { tag: tags.invalid, color: 'var(--error)' }
+      ])),
       themeSlot.current.of(EditorView.theme({}, { dark: currentTheme.current === 'dark' })),
       EditorView.contentAttributes.of({ 'aria-label': 'Éditeur Markdown', spellcheck: 'true' }),
       EditorView.updateListener.of(update => { if (update.docChanged) onChange.current(update.state.doc.toString()) })

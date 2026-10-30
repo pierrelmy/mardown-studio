@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import DOMPurify from 'dompurify'
+import { renderDiagram } from '../services/diagram'
 import { renderMarkdown, localImageURL } from '../services/markdown'
 import type { Theme } from '../../shared/types'
-let renderSequence = 0
 let mermaidQueue = Promise.resolve()
 export function Preview({ content, path, theme }: { content: string; path: string | null; theme: Theme }) {
   const host = useRef<HTMLDivElement>(null)
@@ -25,13 +24,11 @@ export function Preview({ content, path, theme }: { content: string; path: strin
           }
           const diagrams = container.querySelectorAll<HTMLElement>('[data-mermaid]')
           if (diagrams.length) {
-            const { default: mermaid } = await import('mermaid')
-            mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: theme === 'dark' ? 'dark' : 'default', maxTextSize: 50000, suppressErrorRendering: true })
             for (const diagram of diagrams) {
               if (cancelled) return
               try {
-                const { svg } = await mermaid.render(`diagram-${++renderSequence}`, diagram.textContent ?? '')
-                diagram.outerHTML = `<div class="mermaid-diagram">${DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['foreignObject'], ADD_ATTR: ['dominant-baseline'] })}</div>`
+                const svg = await renderDiagram(diagram.textContent ?? '', theme)
+                diagram.outerHTML = `<div class="mermaid-diagram">${svg}</div>`
               } catch (error) { diagram.className = 'diagram-error'; diagram.textContent = `Diagramme Mermaid invalide : ${error instanceof Error ? error.message : String(error)}` }
             }
           }

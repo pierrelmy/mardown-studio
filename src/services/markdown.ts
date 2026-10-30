@@ -21,6 +21,10 @@ parser.use({
     }, renderer: token => mathHTML(String(token.text), false) }
   ],
   renderer: {
+    heading({ tokens, text, depth }: Tokens.Heading) {
+      const id = text.toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim().replace(/\s+/g, '-')
+      return `<h${depth} id="${escapeHTML(id)}">${this.parser.parseInline(tokens)}</h${depth}>`
+    },
     html({ text }: Tokens.HTML | Tokens.Tag) { return escapeHTML(text) },
     code({ text, lang }: Tokens.Code) {
       const language = lang?.split(/\s/)[0] ?? ''
@@ -32,7 +36,7 @@ parser.use({
 })
 export function renderMarkdown(content: string): string {
   const html = parser.parse(content, { async: false }) as string
-  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true, mathMl: true }, ADD_ATTR: ['data-mermaid'], FORBID_TAGS: ['style', 'iframe', 'object', 'embed', 'form'], FORBID_ATTR: ['style'] })
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true, mathMl: true }, ADD_ATTR: ['data-mermaid'], FORBID_TAGS: ['style', 'iframe', 'object', 'embed', 'form'] })
 }
 export function localImageURL(source: string, documentPath: string | null): string | null {
   if (/^(https:\/\/|data:image\/(?:png|jpeg|gif|webp|avif);base64,)/i.test(source)) return source

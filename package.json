@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:desktop": "npm run build && node tests/desktop.mjs",
     "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder"
+    "dist": "npm run build && electron-builder",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test"
   },
   "engines": {
     "node": ">=22.12.0"
@@ -34,7 +37,8 @@
         "dmg",
         "zip"
       ],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "identity": "-"
     },
     "win": {
       "target": [
@@ -52,10 +56,12 @@
   "dependencies": {
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.13.1",
     "@codemirror/language-data": "^6.5.2",
     "@codemirror/search": "^6.7.2",
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.15",
+    "@lezer/highlight": "^1.2.5",
     "codemirror": "^6.0.2",
     "dompurify": "^3.4.17",
     "highlight.js": "^11.12.0",
@@ -77,9 +83,11 @@
     "electron": "^45.2.0",
     "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
-  }
+  },
+  "license": "MIT"
 }
